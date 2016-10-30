@@ -54,7 +54,7 @@ void setup() {
   pinMode(buttonPin, INPUT);  //sets the "buttonpin" to an input, so it can take in values from the button
 
 //the for loop zeroes the arrays when the program starts
-  for(int i = 0; i < 80; i++)\
+  for(int i = 0; i < 80; i++)
   {
       for(int j = 0; j < 2; j++)
       {
