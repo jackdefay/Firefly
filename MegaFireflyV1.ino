@@ -200,23 +200,31 @@ void synchronized()  //called when the firefly is synched up with all adjacent f
 
 int checkPort(unsigned long input[][2], int port, int iteration){  //generalized function for reading and recording data from the ports
 
-  unsigned long temp = input[iteration-2][1]; //sets "temp" to the last recorded state of the given firefly (either on or off)
+  unsigned long temp = input[iteration-1][1]; //sets "temp" to the last recorded state of the given firefly (either on or off)
   //unsigned long time = millis();  //an intermediate variable for recording
+
 
   if((port == 1) && (Serial1.available()))  //if the firefly we're looking at is on port 1, AND there is data stored in that port's buffer:
   {
-  	  if((Serial1.read() == 1) && (temp == 0))  //if the first byte read = 1, and the last recorded state of said firefly is 0:
+  		int readValue = Serial1.read();
+
+  		Serial.print("111the recieved value is: ");
+  		Serial.println(readValue);
+
+  	  if((readValue == 1) && (temp == 0))  //if the first byte read = 1, and the last recorded state of said firefly is 0:
   	  {										//then a change of state must have occured in said firefly (in this case off to on)
 		    input[iteration][0] = millis();  //then record the time this state change occured
 		    input[iteration][1] = 1; 		   //and record that the firefly is now on
 		    iteration++;					   //note that one more peice of data has been recorded, we're keeping track of this to prevent over recording data in the array
+	  		Serial.print("iteration1 should increase");
 	  }
 
-	  else if((Serial1.read() == 0) && (temp == 1)) //then if the previous "if statement" was invalid,
+	  else if((readValue == 0) && (temp == 1)) //then if the previous "if statement" was invalid,
 	  {											//checks to see if the firefly we're looking at has gone from on to off
 		    input[iteration][0] = millis();   //records the time this occured
 		    input[iteration][1] = 0;			//records that said firefly is now off
 		    iteration++;						//again, notes that one more piece of data has been recorded, this also allows us to keep track of which slot in the array we're on
+	  		Serial.print("iteration1 should increase");
 	  }
 	  Serial.print("111the time recorded is: ");  //print statements for troubleshooting
 	  Serial.println(input[iteration-1][0]);  //since iteration++ happens, this is actually the current value
@@ -225,19 +233,26 @@ int checkPort(unsigned long input[][2], int port, int iteration){  //generalized
   }
 
   else if((port == 2) && (Serial2.available()))  //if the firefly we're looking at is on port 2, AND there is data stored in that port's buffer:
-  {
-  	  if((Serial2.read() == 1) && (temp == 0))  //if the first byte read = 1, and the last recorded state of said firefly is 0:
+  {	
+  		int readValue = Serial2.read();
+
+  		Serial.print("222the recieved value is: ");
+  		Serial.println(readValue);
+
+  	  if((readValue == 1) && (temp == 0))  //if the first byte read = 1, and the last recorded state of said firefly is 0:
   	  {										//then a change of state must have occured in said firefly (in this case off to on)
 		    input[iteration][0] = millis();  //then record the time this state change occured
 		    input[iteration][1] = 1; 		   //and record that the firefly is now on
 		    iteration++;					   //note that one more peice of data has been recorded, we're keeping track of this to prevent over recording data in the array
+	 		Serial.print("iteration2 should increase");
 	  }
 
-	  else if((Serial2.read() == 0) && (temp == 1)) //then if the previous "if statement" was invalid,
+	  else if((readValue == 0) && (temp == 1)) //then if the previous "if statement" was invalid,
 	  {											//checks to see if the firefly we're looking at has gone from on to off
 		    input[iteration][0] = millis();   //records the time this occured
 		    input[iteration][1] = 0;			//records that said firefly is now off
 		    iteration++;						//again, notes that one more piece of data has been recorded, this also allows us to keep track of which slot in the array we're on
+	 		Serial.print("iteration2 should increase");
 	  }
 	  Serial.print("222the time recorded is: ");  //print statement for troubleshooting
 	  Serial.println(input[iteration-1][0]);
@@ -247,18 +262,25 @@ int checkPort(unsigned long input[][2], int port, int iteration){  //generalized
 
   else if((port == 3) && (Serial3.available()))  //if the firefly we're looking at is on port 3, AND there is data stored in that port's buffer:
   {
-  	  if((Serial3.read() == 1) && (temp == 0))  //if the first byte read = 1, and the last recorded state of said firefly is 0:
+  		int readValue = Serial3.read();
+
+  		Serial.print("333the recieved value is: ");
+  		Serial.println(readValue);
+
+  	  if((readValue == 1) && (temp == 0))  //if the first byte read = 1, and the last recorded state of said firefly is 0:
   	  {										//then a change of state must have occured in said firefly (in this case off to on)
 		    input[iteration][0] = millis();  //then record the time this state change occured
 		    input[iteration][1] = 1; 		   //and record that the firefly is now on
 		    iteration++;					   //note that one more peice of data has been recorded, we're keeping track of this to prevent over recording data in the array
+		    Serial.print("iteration3 should increase");
 	  }
 
-	  else if((Serial3.read() == 0) && (temp == 1)) //then if the previous "if statement" was invalid,
+	  else if((readValue == 0) && (temp == 1)) //then if the previous "if statement" was invalid,
 	  {											//checks to see if the firefly we're looking at has gone from on to off
 		    input[iteration][0] = millis();   //records the time this occured
 		    input[iteration][1] = 0;			//records that said firefly is now off
 		    iteration++;						//again, notes that one more piece of data has been recorded, this also allows us to keep track of which slot in the array we're on
+	 		Serial.print("iteration3 should increase");
 	  }
 	  Serial.print("333the time recorded is: ");  //print statements for troubleshooting
 	  Serial.println(input[iteration-1][0]);
