@@ -36,8 +36,6 @@ int mod = 0;  //declares the modifier value as a global variable
 
     unsigned long avgOffset = 0;  //the average offset value, this is used to judge how close this firefly is to the correct offset value
 
-int send = 0;  //an intermediate variable for sending data
-
 //uses "unsigned long" format since these arrays store time. unsigned longs can store values twice as large(up to 2^32 - 1) as a normal long, but can only store possitive values
 unsigned long input1[80][2];  //declares the 3, 2D input arrays of size 80 to store 80 state changes and the time they occur
 unsigned long input2[80][2];  //first layer stores the time the change occured
@@ -85,78 +83,16 @@ void loop(){
 		iteration2 = checkPort(input2, 2, iteration2);
 		iteration3 = checkPort(input3, 3, iteration3);
 
-	  // check to see if it's time to blink the LED: if the difference between the current time and last time the LED blinked is bigger than the interval value
-	  unsigned long currentMillis = millis();
+		timeToBlink();
 
-	    if ((currentMillis - previousMillis + OFFSET) >= (FREQUENCY + mod)){  //if the time passed since the previous blink equals the blink frequency, then led changes states
-		    previousMillis = currentMillis;     // save the last time the LED blinked
+		printSht();
 
-		    if (ledState == LOW){
-		    	send = 1;
-		    	ledState = HIGH;  // if the LED is off turn it on and vice-versa:
-		    } 
-		    else{
-		    	send = 0;
-		    	ledState = LOW;
-		    }
+		updateAvg();
 
-		    digitalWrite(ledPin, ledState);  // set the LED with the ledState of the variable:
-		    Serial1.write(send);  //then broadcasts that the led has changed state, in real life this would be done with a sense like sight
-		    Serial2.write(send);  //but here we've simplified and streamlined the process of "sight" for communication
-		    Serial3.write(send);
-	    }
-
-	    if(millis()%1000==0){  //print statements for troubleshooting
-		    Serial.print("the offset of the other fireflies are: ");
-		    Serial.println(offset1);
-		    Serial.println(offset2);
-		    Serial.println(offset3);
-
-		    Serial.print("the iterations of the other fireflies are: ");
-		    Serial.println(iteration1);
-		    Serial.println(iteration2);
-		    Serial.println(iteration3);
-
-			Serial.print("the avgOffset is: ");
-			Serial.println(avgOffset);
-
-		    Serial.print("FREQUENCY + mod = ");
-		    Serial.println(FREQUENCY + mod);
-	    }
-
-	    if(iteration1 > 2){  //if the first array has stored at least 2 data points, then calculates the offsets by taking the taking the remainer of the division of the last recorded value and the time interval: FREQUENCY
-		 	offset1 = (input1[iteration1-1][0])%FREQUENCY;
-	    }
-
-	    if(iteration2 > 2){
-		 	offset2 = (input2[iteration2-1][0]) % FREQUENCY;
-	    }
-
-	    if(iteration3 > 2){
-	  		offset3 = (input3[iteration3-1][0]) % FREQUENCY;
-	    }
-
-
-	    if((iteration1>2) && (iteration2>2) && (iteration3>2)){  //an extra if case to tell the program when there are enough data points to do calculations
-	    	started = true;
-	    }
-	  
-	    if((started)){  //calculates the average to evaluate how synchronized this firefly is
-	  	    avgOffset = ((offset1+offset2+offset3+OFFSET+mod)/4);  //calculates the arithmatic mean rounded off to a whole number(in milliseconds) - also, averages all connected fireflies AND itself to avoid differences in data.
-	    }
-
-	    if((started) && (avgOffset) < (OFFSET + mod)) mod++;  //shifts the frequency of the firefly longer by a tenth of a second if the average is larger
-
-	    else if((started) && (avgOffset) > (OFFSET + mod)) mod--;  //shifts the frequency of the firefly down if the average is shorter
-
-	    else if((started) && (avgOffset) == (OFFSET + mod)){ //CHANGE THIS LATER TO CHECK EQUIVALENCE TO EACH CONNECTION INDEPENDANTELY
-	 	    Serial.println("SYNCHRONIZED!");
-	 	    synchronized();
-	    }  //if all of the frequencies are equivalent, then enters the "synchronized" function - will switch to a more adaptable approach later
-
+		shiftMod();
 	  
 	    //failsafe stops the program from running if the max value of the unsigned int format is exceded, or if the capacity of the arrays are exceded, by going into an infinite while loop
-	    if((millis() >= 4294967295) || (iteration1 >=80) || (iteration2 >=80) || (iteration3 >=80) /*|| ((FREQUENCY+mod) == 0)*/) excededTime();
+	    if((millis() >= 4294967295) || (iteration1 >=80) || (iteration2 >=80) || (iteration3 >=80)) excededTime();
     }//end bracket for the while loop
 }//end bracket for the loop
 
@@ -273,3 +209,84 @@ int checkPort(unsigned long input[][2], int port, int iteration){  //generalized
     }
 	return iteration;  //returns the "iteration" to make sure that iteration is being passed back to the loop
 }//close bracket for the funtion
+
+void timeToBlink(){
+// check to see if it's time to blink the LED: if the difference between the current time and last time the LED blinked is bigger than the interval value
+	unsigned long currentMillis = millis();
+
+	//THIS IS THE SPOT THAT I NEED TO FIX - THE OFFSET VALUE MUST BE CORRECTLY FACTORED IN TO THIS PART, NOT SURE HOW YET
+
+	if ((currentMillis - previousMillis) >= (FREQUENCY+mod)){  //if the time passed since the previous blink equals the blink frequency, then led changes states
+		previousMillis = currentMillis;     // save the last time the LED blinked
+		int send = 0;  //an intermediate variable for sending data
+
+		if (ledState == LOW){
+			send = 1;
+		    ledState = HIGH;  // if the LED is off turn it on and vice-versa:
+		} 
+		else{
+			send = 0;
+		   	ledState = LOW;
+		}
+
+		digitalWrite(ledPin, ledState);  // set the LED with the ledState of the variable:
+		Serial1.write(send);  //then broadcasts that the led has changed state, in real life this would be done with a sense like sight
+		Serial2.write(send);  //but here we've simplified and streamlined the process of "sight" for communication
+	    Serial3.write(send);
+	}
+}
+
+void printSht(){
+	if(millis()%1000==0){  //print statements for troubleshooting
+		Serial.print("the offset of the other fireflies are: ");
+		Serial.println(offset1);
+		Serial.println(offset2);
+		Serial.println(offset3);
+
+		Serial.print("the iterations of the other fireflies are: ");
+		Serial.println(iteration1);
+		Serial.println(iteration2);
+		Serial.println(iteration3);
+
+		Serial.print("the avgOffset is: ");
+		Serial.println(avgOffset);
+
+		Serial.print("FREQUENCY + mod = ");
+		Serial.println(FREQUENCY + mod);
+	}
+}
+
+void updateAvg(){
+	if(iteration1 > 2){  //if the first array has stored at least 2 data points, then calculates the offsets by taking the taking the remainer of the division of the last recorded value and the time interval: FREQUENCY
+	 	offset1 = (input1[iteration1-1][0])%FREQUENCY;
+	}
+
+	if(iteration2 > 2){
+		offset2 = (input2[iteration2-1][0]) % FREQUENCY;
+	}
+
+	if(iteration3 > 2){
+		offset3 = (input3[iteration3-1][0]) % FREQUENCY;
+	}
+
+
+	if((iteration1>2) && (iteration2>2) && (iteration3>2)){  //an extra if case to tell the program when there are enough data points to do calculations
+	   	started = true;
+	}
+	  
+	if((started)){  //calculates the average to evaluate how synchronized this firefly is
+	    avgOffset = ((offset1+offset2+offset3+OFFSET+mod)/4);  //calculates the arithmatic mean rounded off to a whole number(in milliseconds) - also, averages all connected fireflies AND itself to avoid differences in data.
+	}
+}
+
+void shiftMod(){
+	if((started) && (avgOffset) < (OFFSET + mod)) mod++;  //shifts the frequency of the firefly longer by a tenth of a second if the average is larger
+
+	else if((started) && (avgOffset) > (OFFSET + mod)) mod--;  //shifts the frequency of the firefly down if the average is shorter
+
+	else if((started) && (avgOffset) == (OFFSET + mod)){ //CHANGE THIS LATER TO CHECK EQUIVALENCE TO EACH CONNECTION INDEPENDANTELY
+	    Serial.println("SYNCHRONIZED!");
+	    synchronized();
+	}  //if all of the frequencies are equivalent, then enters the "synchronized" function - will switch to a more adaptable approach later
+
+}
