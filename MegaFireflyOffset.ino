@@ -19,7 +19,7 @@
 	//not including any additional libraries
 
 	#define CYCLEDURATION 1000  //should remain constant across uploads, but could change this value to model different species of fireflies
-	#define OFFSET 100 //Use this to generalize program to upload to more than one arduino
+	#define OFFSET 400 //Use this to generalize program to upload to more than one arduino
 
 	int ledPin = 13;  //declares the output for the led
 	int buttonPin = 2;  //declares the output for the startbutton
@@ -50,6 +50,8 @@
 	
 	int ledState = LOW;  //ledState used to set the LED
 	unsigned long previousMillis = 0;  //stores the last time LED was updated
+
+	unsigned int previousLCI = 0;
 
 	bool started = false;  //boolean for starting the CYCLEDURATION calculations only once there are enough data points to operate with
 	bool button = false;  //boolean for starting the "loop" portion of the program once the button has been pressed
@@ -306,13 +308,16 @@
 	}
 
 	void shiftMod(){
-		if((started) && (avgOffset) <= (500) && (millis()%100 <= 10)) mod++;  //shifts the CYCLEDURATION of the firefly longer by a tenth of a second if the average is larger
+		if((LCIteration - previousLCI >= 1) && (started)){
+			previousLCI = LCIteration;
 
-		else if((started) && (avgOffset) > (500) && (millis()%100 <= 10)) mod--;  //shifts the CYCLEDURATION of the firefly down if the average is shorter
+			/*if((avgOffset) <= (500))*/ mod = avgOffset/2;  //shifts the CYCLEDURATION of the firefly longer by a tenth of a second if the average is larger
 
-		else if((started) && (offset1 == 0) && (offset2 == 0) && (offset3 == 0)){
-		    Serial.println("SYNCHRONIZED!");
-		    synchronized();
-		}  //if all of the frequencies are equivalent, then enters the "synchronized" function - will switch to a more adaptable approach later
+			//else if((avgOffset) > (500)) mod = (avgOffset - CYCLEDURATION)/2;  //shifts the CYCLEDURATION of the firefly down if the average is shorter
 
+			/*else */if((offset1 == 0) && (offset2 == 0) && (offset3 == 0)){
+			    Serial.println("SYNCHRONIZED!");
+			    synchronized();
+			}  //if all of the frequencies are equivalent, then enters the "synchronized" function - will switch to a more adaptable approach later
+		}
 	}
