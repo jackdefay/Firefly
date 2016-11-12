@@ -1,7 +1,7 @@
 	/*
 	 MegaFireflyOffset.ino
 
-	 Each Arduino models a firefly in a firefly swarm. These "fireflies" blink an LED at a constant frequency,
+	 Each Arduino models a firefly in a firefly swarm. These "fireflies" blink an LED at a constant CYCLEDURATION,
 	 And modulate their offset based on the fireflies around it. Each firefly communicates when it has
 	 turned its LED on or off to the fireflies it is connected to through serial communication. Each firefly
 	 takes in data from the fireflies it is connected to, and determines each of their blinking offsets.
@@ -18,7 +18,7 @@
 
 	//not including any additional libraries
 
-	#define FREQUENCY 1000  //should remain constant across uploads, but could change this value to model different species of fireflies
+	#define CYCLEDURATION 1000  //should remain constant across uploads, but could change this value to model different species of fireflies
 	#define OFFSET 100 //Use this to generalize program to upload to more than one arduino
 
 	int ledPin = 13;  //declares the output for the led
@@ -26,28 +26,32 @@
 
 	int mod = 0;  //declares the modifier value as a global variable
 
-		int iteration1 = 1;  //declares "iteration," which keeps track of the number of times the if statement has triggered
-		int iteration2 = 1;  //same for the other two if statements
-		int iteration3 = 1;
-		//int myIteration = 1;
+	unsigned int cycleCount = 1;
 
-		unsigned long offset1 = 0;  //declares "offset," which keeps track of the offset that each of the connected fireflies
-	 	unsigned long offset2 = 0;  //are blinking at, calculated based on the values stored in the "input" arrays
-	    unsigned long offset3 = 0;
+	unsigned int iteration1 = 1;  //declares "iteration," which keeps track of the number of times the if statement has triggered
+	unsigned int iteration2 = 1;  //same for the other two if statements
+	unsigned int iteration3 = 1;
+	unsigned int myIteration = 1;
+	unsigned int LCIteration = 1;  //Least Common Iteration
 
-	    unsigned long avgOffset = 0;  //the average offset value, this is used to judge how close this firefly is to the correct offset value
+	unsigned int offset1 = 0;  //declares "offset," which keeps track of the offset that each of the connected fireflies
+	unsigned int offset2 = 0;  //are blinking at, calculated based on the values stored in the "input" arrays
+	unsigned int offset3 = 0;
+	unsigned int myOffset = 0;
+
+	unsigned int avgOffset = 0;  //the average offset value, this is used to judge how close this firefly is to the correct offset value
 
 	//uses "unsigned long" format since these arrays store time. unsigned longs can store values twice as large(up to 2^32 - 1) as a normal long, but can only store possitive values
 	unsigned long input1[80][2];  //declares the 3, 2D input arrays of size 80 to store 80 state changes and the time they occur
 	unsigned long input2[80][2];  //first layer stores the time the change occured
 	unsigned long input3[80][2];  //second layer stores if it is on(1 for on, 0 for off)
+	unsigned long myData[80][2];
 
-	//unsigned Long myData[80][2];  //declares an identical array to keep track of the times for this firefly
-
+	
 	int ledState = LOW;  //ledState used to set the LED
 	unsigned long previousMillis = 0;  //stores the last time LED was updated
 
-	bool started = false;  //boolean for starting the frequency calculations only once there are enough data points to operate with
+	bool started = false;  //boolean for starting the CYCLEDURATION calculations only once there are enough data points to operate with
 	bool button = false;  //boolean for starting the "loop" portion of the program once the button has been pressed
 
 	void setup() {
@@ -61,7 +65,7 @@
 	            input1[i][j] = 0;
 	            input2[i][j] = 0;
 	            input3[i][j] = 0;
-	            //myData[i][j] = 0;
+	            myData[i][j] = 0;
 	        }
 	    }
 
@@ -77,9 +81,9 @@
 	void loop(){
 
 		if(digitalRead(buttonPin) == HIGH){  //a simple if statement to start the rest of "loop" when the button (on pin2) is pressed
-			delay(1000);
+			delay(1000+OFFSET);
 			button = true;
-			previousMillis = millis() + OFFSET;  //this resets the "previousMillis" to the current time, modified for the initial offset, so each firefly restarts its counter, preventing built up flashes all occuring at once
+			previousMillis = millis();  //this resets the "previousMillis" to the current time, modified for the initial offset, so each firefly restarts its counter, preventing built up flashes all occuring at once
 		}
 
 		while(button){  //starts main portion of the program when the button is pressed
@@ -116,8 +120,8 @@
 
 	void synchronized(){  //called when the firefly is synched up with all adjacent fireflies
 	                      //will apply a more adaptive method later
-	    while(true){      //blinks the led at the synchronzed frequency, but does so in a way that lines up all of the blinking
-		    if(millis()%(FREQUENCY) == 0){  //since the fireflies are all sync'd up, this time fram will be the same across each firefly
+	    while(true){      //blinks the led at the synchronzed CYCLEDURATION, but does so in a way that lines up all of the blinking
+		    if(millis()%(CYCLEDURATION) == 0){  //since the fireflies are all sync'd up, this time fram will be the same across each firefly
 		        if(ledState==LOW) ledState = HIGH;
 		        else if(ledState==HIGH) ledState = LOW;
 		        digitalWrite(ledPin, ledState);  //same logic as the exededTime function
@@ -221,9 +225,11 @@
 
 		//THIS IS THE SPOT THAT I NEED TO FIX - THE OFFSET VALUE MUST BE CORRECTLY FACTORED IN TO THIS PART, NOT SURE HOW YET
 
-		if ((currentMillis - previousMillis) >= (FREQUENCY+mod)){  //if the time passed since the previous blink equals the blink frequency, then led changes states
+		if ((currentMillis - previousMillis) >= (CYCLEDURATION + mod)){  //if the time passed since the previous blink equals the blink CYCLEDURATION, then led changes states
 			previousMillis = currentMillis;     // save the last time the LED blinked
 			int send = 0;  //an intermediate variable for sending data
+
+			cycleCount++;
 
 			if (ledState == LOW){
 				send = 1;
@@ -240,9 +246,9 @@
 			Serial2.write(send);  //but here we've simplified and streamlined the process of "sight" for communication
 		    Serial3.write(send);
 
-		    //myData[myIteration][0] = millis();  //records the time change for this firefly, in the same foramt as the other fireflies
-		    //myData[myIteration][1] = send;
-		    //myIteration++;
+		    myData[myIteration][0] = millis();  //records the time change for this firefly, in the same foramt as the other fireflies
+		    myData[myIteration][1] = send;
+		    myIteration++;
 		}
 	}
 
@@ -261,40 +267,50 @@
 			Serial.print("the avgOffset is: ");
 			Serial.println(avgOffset);
 
-			Serial.print("FREQUENCY + mod = ");
-			Serial.println(FREQUENCY + mod);
+			Serial.print("mod = ");
+			Serial.println(mod);
+
+			Serial.print("LCIteration = ");
+			Serial.println(LCIteration);
+
+			Serial.print("cycleCount = ");
+			Serial.println(cycleCount);
 		}
 	}
 
 	void updateAvg(){
-		if(iteration1 > 2){  //if the first array has stored at least 2 data points, then calculates the offsets by taking the taking the remainer of the division of the last recorded value and the time interval: FREQUENCY
-		 	offset1 = (input1[iteration1-1][0])%FREQUENCY;
-		}
-
-		if(iteration2 > 2){
-			offset2 = (input2[iteration2-1][0]) % FREQUENCY;
-		}
-
-		if(iteration3 > 2){
-			offset3 = (input3[iteration3-1][0]) % FREQUENCY;
-		}
-
-
-		if((iteration1>2) && (iteration2>2) && (iteration3>2)){  //an extra if case to tell the program when there are enough data points to do calculations
+		if((iteration1>3) && (iteration2>3) && (iteration3>3) && (myIteration>3)){  //an extra if case to tell the program when there are enough data points to do calculations
 		   	started = true;
+
+		   	unsigned int tempMin1 = min(iteration1, iteration2);  //have to break it up since putting functions inside of min doesn't work
+		   	unsigned int tempMin2 = min(iteration3, myIteration);
+		   	LCIteration = min(tempMin1, tempMin2);
+
+		   	//if the array has stored at least 3 data points, then calculates the offsets by taking the taking the remainer of the division of the last recorded value and the time interval: CYCLEDURATION
+		   	/*offset1 = (input1[iteration1-1][0]) % CYCLEDURATION;
+		   	offset2 = (input2[iteration2-1][0]) % CYCLEDURATION;
+		   	offset3 = (input3[iteration3-1][0]) % CYCLEDURATION;
+		   	myOffset = (myData[myIteration-1][0]) % CYCLEDURATION;*/
+
+		   	//need the "-1" after LCIteration?
+		   	//this plan for calculating offset will work IFF the iteration maintains consistency with the cycle count
+		   	offset1 = (input1[LCIteration-1][0] - myData[LCIteration-1][0]);
+		   	offset2 = (input2[LCIteration-1][0] - myData[LCIteration-1][0]);
+		   	offset3 = (input3[LCIteration-1][0] - myData[LCIteration-1][0]);
+		   	myOffset = 0; //not necessary, just to illustrate a point - the offset of self to self is always 0
 		}
 		  
 		if((started)){  //calculates the average to evaluate how synchronized this firefly is
-		    avgOffset = ((offset1+offset2+offset3+OFFSET+mod)/4);  //calculates the arithmatic mean rounded off to a whole number(in milliseconds) - also, averages all connected fireflies AND itself to avoid differences in data.
+		    avgOffset = ((offset1+offset2+offset3)/3);  //calculates the arithmatic mean rounded off to a whole number(in milliseconds) - also, averages all connected fireflies AND itself to avoid differences in data.
 		}
 	}
 
 	void shiftMod(){
-		if((started) && (avgOffset) < (OFFSET + mod)) mod++;  //shifts the frequency of the firefly longer by a tenth of a second if the average is larger
+		if((started) && (avgOffset) <= (500) && (millis()%100 <= 10)) mod++;  //shifts the CYCLEDURATION of the firefly longer by a tenth of a second if the average is larger
 
-		else if((started) && (avgOffset) > (OFFSET + mod)) mod--;  //shifts the frequency of the firefly down if the average is shorter
+		else if((started) && (avgOffset) > (500) && (millis()%100 <= 10)) mod--;  //shifts the CYCLEDURATION of the firefly down if the average is shorter
 
-		else if((started) && (avgOffset) == (OFFSET + mod)){ //CHANGE THIS LATER TO CHECK EQUIVALENCE TO EACH CONNECTION INDEPENDANTELY
+		else if((started) && (offset1 == 0) && (offset2 == 0) && (offset3 == 0)){
 		    Serial.println("SYNCHRONIZED!");
 		    synchronized();
 		}  //if all of the frequencies are equivalent, then enters the "synchronized" function - will switch to a more adaptable approach later
