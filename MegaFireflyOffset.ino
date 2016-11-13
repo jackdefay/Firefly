@@ -19,7 +19,7 @@
 	//not including any additional libraries
 
 	#define CYCLEDURATION 1000  //should remain constant across uploads, but could change this value to model different species of fireflies
-	#define OFFSET 400 //Use this to generalize program to upload to more than one arduino
+	#define OFFSET 100 //Use this to generalize program to upload to more than one arduino
 
 	int ledPin = 13;  //declares the output for the led
 	int buttonPin = 2;  //declares the output for the startbutton
@@ -34,12 +34,12 @@
 	unsigned int myIteration = 1;
 	unsigned int LCIteration = 1;  //Least Common Iteration
 
-	unsigned int offset1 = 0;  //declares "offset," which keeps track of the offset that each of the connected fireflies
-	unsigned int offset2 = 0;  //are blinking at, calculated based on the values stored in the "input" arrays
-	unsigned int offset3 = 0;
-	unsigned int myOffset = 0;
+	int offset1 = 0;  //declares "offset," which keeps track of the offset that each of the connected fireflies
+	int offset2 = 0;  //are blinking at, calculated based on the values stored in the "input" arrays
+	int offset3 = 0;
+	int myOffset = 0;
 
-	unsigned int avgOffset = 0;  //the average offset value, this is used to judge how close this firefly is to the correct offset value
+	int avgOffset = 0;  //the average offset value, this is used to judge how close this firefly is to the correct offset value
 
 	//uses "unsigned long" format since these arrays store time. unsigned longs can store values twice as large(up to 2^32 - 1) as a normal long, but can only store possitive values
 	unsigned long input1[80][2];  //declares the 3, 2D input arrays of size 80 to store 80 state changes and the time they occur
@@ -251,6 +251,9 @@
 		    myData[myIteration][0] = millis();  //records the time change for this firefly, in the same foramt as the other fireflies
 		    myData[myIteration][1] = send;
 		    myIteration++;
+
+		    Serial.print("recorded time of self is: ");
+		    Serial.println(myData[myIteration-1][0]);
 		}
 	}
 
@@ -261,10 +264,11 @@
 			Serial.println(offset2);
 			Serial.println(offset3);
 
-			Serial.print("the iterations of the other fireflies are: ");
+			Serial.print("the iterations of the fireflies are: ");
 			Serial.println(iteration1);
 			Serial.println(iteration2);
 			Serial.println(iteration3);
+			Serial.println(myIteration);
 
 			Serial.print("the avgOffset is: ");
 			Serial.println(avgOffset);
@@ -288,17 +292,37 @@
 		   	unsigned int tempMin2 = min(iteration3, myIteration);
 		   	LCIteration = min(tempMin1, tempMin2);
 
-		   	//if the array has stored at least 3 data points, then calculates the offsets by taking the taking the remainer of the division of the last recorded value and the time interval: CYCLEDURATION
-		   	/*offset1 = (input1[iteration1-1][0]) % CYCLEDURATION;
-		   	offset2 = (input2[iteration2-1][0]) % CYCLEDURATION;
-		   	offset3 = (input3[iteration3-1][0]) % CYCLEDURATION;
-		   	myOffset = (myData[myIteration-1][0]) % CYCLEDURATION;*/
+		   	//if the array has stored at least 3 data points, then calculates the offsets by taking the taking the difference of the last recorded value for that firefly, and the corresponding value for self
 
 		   	//need the "-1" after LCIteration?
-		   	//this plan for calculating offset will work IFF the iteration maintains consistency with the cycle count
-		   	offset1 = (input1[LCIteration-1][0] - myData[LCIteration-1][0]);
-		   	offset2 = (input2[LCIteration-1][0] - myData[LCIteration-1][0]);
-		   	offset3 = (input3[LCIteration-1][0] - myData[LCIteration-1][0]);
+		   	//this plan for calculating offset will work IFF the iteration maintains consistency with the cycle count - experimentally it seems to work!
+		    if(myData[iteration1-1][0] > input1[iteration1-1][0]){
+			   	unsigned int uTemp1 = (myData[iteration1-1][0] - input1[iteration1-1][0]);  //this intermediary step is necessary due to the limitations of the data types
+			   	offset1 = (-1)*(uTemp1);
+		    }
+		    else{
+		    	offset1 = (input1[iteration1-1][0] - myData[iteration1-1][0]);
+		    }
+		   
+
+		   	if(myData[iteration2-1][0] > input2[iteration2-1][0]){
+			   	unsigned int uTemp2 = (myData[iteration2-1][0] - input2[iteration2-1][0]);  //for firefly 2
+			   	offset2 = (-1)*(uTemp2);
+		    }
+		    else{
+		    	offset2 = (input2[iteration2-1][0] - myData[iteration2-1][0]);
+		    }
+		  
+
+		   	if(myData[iteration1-3][0] > input3[iteration3-1][0]){
+			   	unsigned int uTemp3 = (myData[iteration3-1][0] - input3[iteration3-1][0]);  //for firefly 3
+			   	offset3 = (-1)*(uTemp3);
+		    }
+		    else{
+		    	offset3 = (input3[iteration3-1][0] - myData[iteration3-1][0]);
+		    }
+		  
+
 		   	myOffset = 0; //not necessary, just to illustrate a point - the offset of self to self is always 0
 		}
 		  
