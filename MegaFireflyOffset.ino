@@ -31,13 +31,13 @@
 	unsigned int iteration1 = 1;  //declares "iteration," which keeps track of the number of times the if statement has triggered
 	unsigned int iteration2 = 1;  //same for the other two if statements
 	unsigned int iteration3 = 1;
-	unsigned int myIteration = 1;
+	unsigned int myIteration = 1;  //keeps track of the number of times this firefly has blinked
 	unsigned int LCIteration = 1;  //Least Common Iteration
 
 	int offset1 = 0;  //declares "offset," which keeps track of the offset that each of the connected fireflies
 	int offset2 = 0;  //are blinking at, calculated based on the values stored in the "input" arrays
 	int offset3 = 0;
-	int myOffset = 0;
+	int myOffset = 0;  //more of a formality since this firefly always has an offset of 0 relative to itself
 
 	int avgOffset = 0;  //the average offset value, this is used to judge how close this firefly is to the correct offset value
 
@@ -45,13 +45,13 @@
 	unsigned long input1[80][2];  //declares the 3, 2D input arrays of size 80 to store 80 state changes and the time they occur
 	unsigned long input2[80][2];  //first layer stores the time the change occured
 	unsigned long input3[80][2];  //second layer stores if it is on(1 for on, 0 for off)
-	unsigned long myData[80][2];
+	unsigned long myData[80][2];  //another array to keep track of the times that this firefly has blinked
 
 	
 	int ledState = LOW;  //ledState used to set the LED
 	unsigned long previousMillis = 0;  //stores the last time LED was updated
 
-	unsigned int previousLCI = 0;
+	unsigned int previousLCI = 0;  //stores the previous least common iteration, in order to keep a constant timing to updating this fireflies offset
 
 	bool started = false;  //boolean for starting the CYCLEDURATION calculations only once there are enough data points to operate with
 	bool button = false;  //boolean for starting the "loop" portion of the program once the button has been pressed
@@ -94,13 +94,13 @@
 			iteration2 = checkPort(input2, 2, iteration2);
 			iteration3 = checkPort(input3, 3, iteration3);
 
-			timeToBlink();
+			timeToBlink();  //checks if its time to blink, and toggles the state of the led accordingly
 
-			printSht();
+			printSht();  //a series of print statements to keep track of different variables, prints every second
 
-			updateAvg();
+			updateAvg();  //updates all of the offset values based on new data, then updates the avg value accordingly
 
-			shiftMod();
+			shiftMod();  //shifts the modifier value to 1/2 of the temporal distance between this firefly and the avg offset
 		  
 		    //failsafe stops the program from running if the max value of the unsigned int format is exceded, or if the capacity of the arrays are exceded, by going into an infinite while loop
 		    if((millis() >= 4294967295) || (iteration1 >=80) || (iteration2 >=80) || (iteration3 >=80)) excededTime();
@@ -225,7 +225,7 @@
 	// check to see if it's time to blink the LED: if the difference between the current time and last time the LED blinked is bigger than the interval value
 		unsigned long currentMillis = millis();
 
-		//THIS IS THE SPOT THAT I NEED TO FIX - THE OFFSET VALUE MUST BE CORRECTLY FACTORED IN TO THIS PART, NOT SURE HOW YET
+		//(fixed...?) THIS IS THE SPOT THAT I NEED TO FIX - THE OFFSET VALUE MUST BE CORRECTLY FACTORED IN TO THIS PART, NOT SURE HOW YET
 
 		if ((currentMillis - previousMillis) >= (CYCLEDURATION + mod)){  //if the time passed since the previous blink equals the blink CYCLEDURATION, then led changes states
 			previousMillis = currentMillis;     // save the last time the LED blinked
@@ -290,7 +290,7 @@
 
 		   	unsigned int tempMin1 = min(iteration1, iteration2);  //have to break it up since putting functions inside of min doesn't work
 		   	unsigned int tempMin2 = min(iteration3, myIteration);
-		   	LCIteration = min(tempMin1, tempMin2);
+		   	LCIteration = min(tempMin1, tempMin2);  //determines the least common value among the iterations, to see the most recent data point that each array should have
 
 		   	//if the array has stored at least 3 data points, then calculates the offsets by taking the taking the difference of the last recorded value for that firefly, and the corresponding value for self
 
@@ -298,7 +298,7 @@
 		   	//this plan for calculating offset will work IFF the iteration maintains consistency with the cycle count - experimentally it seems to work!
 		    if(myData[iteration1-1][0] > input1[iteration1-1][0]){
 			   	unsigned int uTemp1 = (myData[iteration1-1][0] - input1[iteration1-1][0]);  //this intermediary step is necessary due to the limitations of the data types
-			   	offset1 = (-1)*(uTemp1);
+			   	offset1 = (-1)*(uTemp1);													//since the unsigned data structure rolls over if the value exedes 65535 or is negative, this if case is the most straightforwards way to return values that make sense
 		    }
 		    else{
 		    	offset1 = (input1[iteration1-1][0] - myData[iteration1-1][0]);
