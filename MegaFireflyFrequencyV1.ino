@@ -1,5 +1,5 @@
 /*
- MegaFireflyV1.ino
+ MegaFireflyFrequencyV1.ino
 
  Each Arduino models a firefly in a firefly swarm. These "fireflies" blink an LED at a given frequency,
  And modulate their frequency based on the fireflies around it. Each firefly communicates when it has
