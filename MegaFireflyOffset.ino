@@ -335,9 +335,7 @@
 		if((LCIteration - previousLCI >= 1) && (started)){
 			previousLCI = LCIteration;
 
-			/*if((avgOffset) <= (500))*/ mod = avgOffset/2;  //shifts the CYCLEDURATION of the firefly longer by a tenth of a second if the average is larger
-
-			//else if((avgOffset) > (500)) mod = (avgOffset - CYCLEDURATION)/2;  //shifts the CYCLEDURATION of the firefly down if the average is shorter
+			mod = (avgOffset - (CYCLEDURATION+mod))/10;  //the CYCLEDURATION will be shifted by mod in order to reach synchronization. This sets mod to 1/10 the distance 
 
 			/*else */if((offset1 == 0) && (offset2 == 0) && (offset3 == 0)){
 			    Serial.println("SYNCHRONIZED!");
