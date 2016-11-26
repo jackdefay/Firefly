@@ -18,13 +18,14 @@
 
 	//not including any additional libraries
 
-	#define CYCLEDURATION 1000  //should remain constant across uploads, but could change this value to model different species of fireflies
-	#define OFFSET 100 //Use this to generalize program to upload to more than one arduino
+	#define CYCLEDURATION 2000  //should remain constant across uploads, but could change this value to model different species of fireflies
+	#define OFFSET 1300 //Use this to generalize program to upload to more than one arduino
 
 	int ledPin = 13;  //declares the output for the led
 	int buttonPin = 2;  //declares the output for the startbutton
 
 	int mod = 0;  //declares the modifier value as a global variable
+	int totalMod = 0;
 
 	unsigned int cycleCount = 1;
 
@@ -281,6 +282,9 @@
 
 			Serial.print("cycleCount = ");
 			Serial.println(cycleCount);
+
+			Serial.print("the commulative total of the mod value = ");
+			Serial.println(totalMod);
 		}
 	}
 
@@ -335,7 +339,11 @@
 		if((LCIteration - previousLCI >= 1) && (started)){
 			previousLCI = LCIteration;
 
-			mod = (avgOffset - (CYCLEDURATION+mod))/10;  //the CYCLEDURATION will be shifted by mod in order to reach synchronization. This sets mod to 1/10 the distance 
+				//NEED TO KEEP A COMMUNLATIVE TOTAL OF THE MODULAR VALUE, IN ORDER TO CALC THE DISTANCE FROM SELF TO AVG
+				//does this fix it?
+
+			totalMod += mod;
+			mod = (avgOffset - (totalMod))/10;  //the CYCLEDURATION will be shifted by mod in order to reach synchronization. This sets mod to 1/10 the distance 
 
 			/*else */if((offset1 == 0) && (offset2 == 0) && (offset3 == 0)){
 			    Serial.println("SYNCHRONIZED!");
