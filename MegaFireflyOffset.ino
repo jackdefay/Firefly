@@ -18,14 +18,13 @@
 
 	//not including any additional libraries
 
-	#define CYCLEDURATION 2000  //should remain constant across uploads, but could change this value to model different species of fireflies
-	#define OFFSET 1300 //Use this to generalize program to upload to more than one arduino
-
+	#define CYCLEDURATION 3000  //should remain constant across uploads, but could change this value to model different species of fireflies
+	#define OFFSET 2100 //Use this to generalize program to upload to more than one arduin21
 	int ledPin = 13;  //declares the output for the led
 	int buttonPin = 2;  //declares the output for the startbutton
 
 	int mod = 0;  //declares the modifier value as a global variable
-	int totalMod = 0;
+	int totalMod = OFFSET;
 
 	unsigned int cycleCount = 1;
 
