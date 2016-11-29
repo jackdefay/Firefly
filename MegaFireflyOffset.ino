@@ -18,8 +18,8 @@
 
 	//not including any additional libraries
 
-	#define CYCLEDURATION 3000  //should remain constant across uploads, but could change this value to model different species of fireflies
-	#define OFFSET 2100 //Use this to generalize program to upload to more than one arduino
+	#define CYCLEDURATION 2000  //should remain constant across uploads, but could change this value to model different species of fireflies
+	#define OFFSET 1240 //Use this to generalize program to upload to more than one arduino
 	#define CYCLESBEFOREIGNORE 3
 
 	int ledPin = 13;  //declares the output for the led
@@ -103,7 +103,7 @@
 
 			timeToBlink();  //checks if its time to blink, and toggles the state of the led accordingly
 
-			printSht();  //a series of print statements to keep track of different variables, prints every second
+			//printSht();  //a series of print statements to keep track of different variables, prints every second
 
 			updateAvg();  //updates all of the offset values based on new data, then updates the avg value accordingly
 
@@ -331,7 +331,7 @@
 			else if(started3) LCIteration = iteration3;
 
 		//if the array has stored at least 3 data points, then calculates the offsets by taking the taking the difference of the last recorded value for that firefly, and the corresponding value for self
-
+//START TESTING WITH PRINT STATEMENTS HERE
 		if(started1){
 			if(myData[iteration1-1][0] > input1[iteration1-1][0]){
 				unsigned int uTemp1 = (myData[iteration1-1][0] - input1[iteration1-1][0]);  //this intermediary step is necessary due to the limitations of the data types (uTemp stands for unsigned temporary variable)
