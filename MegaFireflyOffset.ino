@@ -19,7 +19,9 @@
 	//not including any additional libraries
 
 	#define CYCLEDURATION 3000  //should remain constant across uploads, but could change this value to model different species of fireflies
-	#define OFFSET 2100 //Use this to generalize program to upload to more than one arduin21
+	#define OFFSET 2100 //Use this to generalize program to upload to more than one arduino
+	#define CYCLESBEFOREIGNORE 3
+
 	int ledPin = 13;  //declares the output for the led
 	int buttonPin = 2;  //declares the output for the startbutton
 
@@ -41,6 +43,8 @@
 
 	int avgOffset = 0;  //the average offset value, this is used to judge how close this firefly is to the correct offset value
 
+	int numberOn = 0; //the number of fireflies that are considered "alive" - used to calulate the average taking into account edge effects
+
 	//uses "unsigned long" format since these arrays store time. unsigned longs can store values twice as large(up to 2^32 - 1) as a normal long, but can only store possitive values
 	unsigned long input1[80][2];  //declares the 3, 2D input arrays of size 80 to store 80 state changes and the time they occur
 	unsigned long input2[80][2];  //first layer stores the time the change occured
@@ -53,7 +57,10 @@
 
 	unsigned int previousLCI = 0;  //stores the previous least common iteration, in order to keep a constant timing to updating this fireflies offset
 
-	bool started = false;  //boolean for starting the CYCLEDURATION calculations only once there are enough data points to operate with
+	bool started = false;
+	bool started1 = false;  //boolean for starting the CYCLEDURATION calculations only once there are enough data points to operate with
+	bool started2 = false;
+	bool started3 = false;
 	bool button = false;  //boolean for starting the "loop" portion of the program once the button has been pressed
 
 	void setup() {
@@ -288,26 +295,54 @@
 	}
 
 	void updateAvg(){
-		if((iteration1>3) && (iteration2>3) && (iteration3>3) && (myIteration>3)){  //an extra if case to tell the program when there are enough data points to do calculations
+		if(iteration1>CYCLESBEFOREIGNORE){  //checks if a firefly is alive and has sent at least CYCLESBEFOREIGNORE signals
+			started1=true;  				//if it is, then say that it has started
+			numberOn++;						//and add one to the tally of number of alive fireflies
+		}
+
+		if(iteration2>CYCLESBEFOREIGNORE){
+			started2=true;
+			numberOn++;
+		}
+
+		if(iteration3>CYCLESBEFOREIGNORE){
+			started3=true;
+			numberOn++;
+		}
+
+		if((started1) && (started2) && (started3)){  //an extra if case to tell the program when there are enough data points to do calculations
 		   	started = true;
+		}
 
-		   	unsigned int tempMin1 = min(iteration1, iteration2);  //have to break it up since putting functions inside of min doesn't work
-		   	unsigned int tempMin2 = min(iteration3, myIteration);
-		   	LCIteration = min(tempMin1, tempMin2);  //determines the least common value among the iterations, to see the most recent data point that each array should have
-
-		   	//if the array has stored at least 3 data points, then calculates the offsets by taking the taking the difference of the last recorded value for that firefly, and the corresponding value for self
-
-		   	//need the "-1" after LCIteration?
+			//need the "-1" after LCIteration?
 		   	//this plan for calculating offset will work IFF the iteration maintains consistency with the cycle count - experimentally it seems to work!
-		    if(myData[iteration1-1][0] > input1[iteration1-1][0]){
-			   	unsigned int uTemp1 = (myData[iteration1-1][0] - input1[iteration1-1][0]);  //this intermediary step is necessary due to the limitations of the data types
-			   	offset1 = (-1)*(uTemp1);													//since the unsigned data structure rolls over if the value exedes 65535 or is negative, this if case is the most straightforwards way to return values that make sense
-		    }
-		    else{
-		    	offset1 = (input1[iteration1-1][0] - myData[iteration1-1][0]);
-		    }
-		   
 
+		//indented to differentiate the weird if statement chain
+			if(started){ //complex chain of if statements, need a better way to do this later
+		   		unsigned int tempMin1 = min(iteration1, iteration2);  //have to break it up since putting functions inside of min doesn't work
+		   		unsigned int tempMin2 = min(iteration3, myIteration);
+		   		LCIteration = min(tempMin1, tempMin2);  //determines the least common value among the iterations, to see the most recent data point that each array should have
+			}
+			else if(started1 && started2) LCIteration = min(iteration1, iteration2);
+			else if(started2 && started3) LCIteration = min(iteration2, iteration3);
+			else if(started1 && started3) LCIteration = min(iteration1, iteration3);
+			else if(started1) LCIteration = iteration1;
+			else if(started2) LCIteration = iteration2;
+			else if(started3) LCIteration = iteration3;
+
+		//if the array has stored at least 3 data points, then calculates the offsets by taking the taking the difference of the last recorded value for that firefly, and the corresponding value for self
+
+		if(started1){
+			if(myData[iteration1-1][0] > input1[iteration1-1][0]){
+				unsigned int uTemp1 = (myData[iteration1-1][0] - input1[iteration1-1][0]);  //this intermediary step is necessary due to the limitations of the data types (uTemp stands for unsigned temporary variable)
+				offset1 = (-1)*(uTemp1);													//since the unsigned data structure rolls over if the value exedes 65535 or is negative, this if case is the most straightforwards way to return values that make sense
+			}
+			else{
+			    offset1 = (input1[iteration1-1][0] - myData[iteration1-1][0]);
+			}
+		}
+		   
+		if(started2){
 		   	if(myData[iteration2-1][0] > input2[iteration2-1][0]){
 			   	unsigned int uTemp2 = (myData[iteration2-1][0] - input2[iteration2-1][0]);  //for firefly 2
 			   	offset2 = (-1)*(uTemp2);
@@ -315,8 +350,9 @@
 		    else{
 		    	offset2 = (input2[iteration2-1][0] - myData[iteration2-1][0]);
 		    }
-		  
+		}
 
+		if(started3){
 		   	if(myData[iteration1-3][0] > input3[iteration3-1][0]){
 			   	unsigned int uTemp3 = (myData[iteration3-1][0] - input3[iteration3-1][0]);  //for firefly 3
 			   	offset3 = (-1)*(uTemp3);
@@ -324,14 +360,18 @@
 		    else{
 		    	offset3 = (input3[iteration3-1][0] - myData[iteration3-1][0]);
 		    }
-		  
+		} 
+		//
 
-		   	myOffset = 0; //not necessary, just to illustrate a point - the offset of self to self is always 0
-		}
-		  
-		if((started)){  //calculates the average to evaluate how synchronized this firefly is
-		    avgOffset = ((offset1+offset2+offset3)/3);  //calculates the arithmatic mean rounded off to a whole number(in milliseconds) - also, averages all connected fireflies AND itself to avoid differences in data.
-		}
+		int tempSum = 0;  //temporary sum of values
+
+		if(started1) tempSum += offset1;  //adds only the values of the fireflies that are alive
+		if(started2) tempSum += offset2;
+		if(started3) tempSum += offset3;
+
+		if(numberOn > 0) avgOffset = tempSum/numberOn;  //then divides by the number of alive fireflies to get an accurate arithmatic mean
+
+		numberOn = 0;  //resets the number of alive fireflies
 	}
 
 	void shiftMod(){
