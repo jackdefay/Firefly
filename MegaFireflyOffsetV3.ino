@@ -2,12 +2,11 @@
 
 #define PERIOD 2000  //the duration of the blink in milliseconds
 #define OFFSET 1000  //the initial wait time for the before the start of the algorithm
-#define TIMEOUT (PERIOD + 1000) //the time before a connected firefly times out, and is no longer considered active
 
 int led = 13;  //declare the pin for the led
 
 int mod = 0;  //this variable will be used to shift the temporal position of the blinking
-int totalmod = OFFSET; //for troubleshooting
+int totalMod = OFFSET; //for troubleshooting
 
 unsigned int iteration1 = 1;
 //unsigned int iteration2 = 1;
@@ -27,6 +26,7 @@ unsigned long myInput[80][2];
 
 int ledState = LOW;
 unsigned long previousMillis = 0;
+unsigned long previousMillis2 = 0;
 
 bool startButton = false;
 
@@ -81,7 +81,7 @@ void checkPort1(){
 			startButton = true;  //if the firefly recieves a 2, it takes this as a signal to initiates the other processes
 		}
 
-		else if(readValue != input1[iteration1-1][1]){
+		else if((readValue != input1[iteration1-1][1]) && (startButton)){
 			input1[iteration1][0] = millis();
 			input1[iteration1][1] = readValue;
 			iteration1++;
@@ -92,7 +92,7 @@ void checkPort1(){
 void timeToBlink(){
 	unsigned long currentMillis = millis();
 
-	if(((currentMillis - previousMillis) >= (PERIOD + mod)) && startButton){
+	if(((currentMillis - previousMillis) >= (PERIOD + mod)) && (startButton)){
 		previousMillis = currentMillis;
 		int valueToSend = 0;
 
@@ -120,10 +120,47 @@ void calcOffset1(){
 	if(iteration1 > 3){
 		if(myInput[iteration1-1][0] > input1[iteration1-1][0]){
 			unsigned int posTemp = (myInput[iteration1-1][0] - input1[iteration1-1][0]);
-			offset = (-1)*(posTemp);
+			offset1 = (-1)*(posTemp);
 		}
 		else{
 			offset1 = (input1[iteration1-1][0] - myInput[iteration1-1][0]);
 		}
+	}
+}
+
+void updateAvg(){
+	int tempSum = 0;
+	int numberOn = 0;
+
+	if(iteration1 > 3){
+		tempSum += offset1;
+		numberOn++;
+	}
+
+	/*
+	if(iteration2 > 3){
+		tempSum += offset2;
+		numberOn++;
+	}
+
+	if(iteration3 > 3){
+		tempSum += offset3;
+		numberOn++;
+	}
+	*/
+
+	if(numberOn > 0) avgOffset = tempSum/numberOn;
+}
+
+void shiftMod(){
+	unsigned long currentMillis2 = millis();
+
+	if((currentMillis2 - previousMillis2) >= (1000)){
+		previousMillis2 = currentMillis2;
+
+		totalMod += mod;
+		mod = (avgOffset/10);
+
+		if(mod==0) Serial.println("SYNCHRONIZED!");
 	}
 }
