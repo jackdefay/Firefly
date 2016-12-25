@@ -66,6 +66,8 @@ void loop() {
 	if(mod > PERIOD || mod < (-1*PERIOD)) Serial.println("MOD IS SPIRALLING OUT OF CONTROL!");  //a debugging check that prints whenever the mod value overtakes the period, which should never be necessary if the initial offset values are less that the period
 
 	checkPort1();  //listen to the three ports on loop
+	//checkPort2();
+	//checkPort3();
 	  //if it returns a 0 or 1, log it
 	  //if it returns a 2, then initiate rest of the program with startbutton vriable
 
@@ -86,7 +88,7 @@ void checkPort1(){
 			if(startButton==false){  //to prevent the command from looping indefinitely
 				Serial1.write(2);  //then relays the 2 value across all of its ports
 				//Serial2.write(2);
-				//Serial3.write(3);
+				//Serial3.write(2);
 				delay(PERIOD+OFFSET);  //waits the set period length, then an additional time for offset. this is how the offset variable is introduced into the system
 				previousMillis = (long) millis();  //resets the previousMillis and previousMillis2 variables to prevent things from piling up
 				previousMillis2 = (long) millis();
@@ -100,6 +102,11 @@ void checkPort1(){
 			input1[iteration1][0] = (long) millis();  //then sets the first row value of the array to the current time
 			input1[iteration1][1] = (long) readValue;  //and the second row value to the new state of the led
 			iteration1++;  //increases the tally for the number of datapoints logged
+
+			//if(millis()%1000 == 0){
+				Serial.print("input1[iteration1-1][0] = ");
+				Serial.println(input1[iteration1-1][0]);
+			//}
 
 			Serial.print("iteration1 = ");  //print statements for debugging
 			Serial.println(iteration1);
@@ -137,6 +144,9 @@ void timeToBlink(){
 		myInput[myIteration][0] = (long) millis();  //logs data in the same format as the other arrays, but for self
 		myInput[myIteration][1] = (long) valueToSend;
 		myIteration++;
+
+		Serial.print("myInput[myIteration-1][0] = ");
+		Serial.println(myInput[myIteration-1][0]);
 	}
 }
 
