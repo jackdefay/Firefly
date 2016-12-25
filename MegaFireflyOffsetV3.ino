@@ -74,7 +74,7 @@ void loop() {
 	//checks the 3 ports
 	timeToBlink();//blinks if it is time to, IF THE STARTBUTTON BOOL IS TRUE
 	calcOffset1();
-	//updateAvg();//update the average value with new data
+	updateAvg();//update the average value with new data
 	//shiftMod();//shift the wavelength based on the mod variable
 
 	//if times out, then use last stored values...or overwrite them...?
@@ -155,7 +155,7 @@ void calcOffset1(){
 		long commonIteration = (long) min(iteration1, myIteration);  //finds the least common itteration of connected firelfy1 and self, in order to find the most recent data point that may be used in calculation
 
 		offset1 = (long) (input1[commonIteration-1][0] - myInput[commonIteration-1][0]);
-		input1[commonIteration-1][3] = offset1;  //logs the offset value in the third row of the array
+		input1[commonIteration-1][2] = offset1;  //logs the offset value in the third row of the array
 
 		if(millis()%1000 == 0){
 			Serial.print("common iteration = ");
