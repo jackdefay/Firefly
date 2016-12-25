@@ -1,34 +1,34 @@
 //MegaFireflyOffsetV3.ino
 
 #define PERIOD 2000  //the duration of the blink in milliseconds
-#define OFFSET 700  //the initial wait time for the before the start of the algorithm
-#define BUTTONPERSON 0 //this value will be 0 on all but one firefly, in order to initiate the start process. button person refers to a queen bee or ant, since the firefly with a 1 will serve tell all the other fireflies to start
+#define OFFSET 1000  //the initial wait time for the before the start of the algorithm
+#define BUTTONPERSON 1 //this value will be 0 on all but one firefly, in order to initiate the start process. button person refers to a queen bee or ant, since the firefly with a 1 will serve tell all the other fireflies to start
 
-int led = 13;  //declare the pin for the led
-int button = 2;  //declare the pin for the start button, will only do something on a single firefly
+long led = 13;  //declare the pin for the led
+long button = 2;  //declare the pin for the start button, will only do something on a single firefly
 
-int mod = 0;  //this variable will be used to shift the temporal position of the blinking
-int totalMod = OFFSET; //for troubleshooting
+long mod = 0;  //this variable will be used to shift the temporal position of the blinking
+long totalMod = OFFSET; //for troubleshooting
 
-unsigned int iteration1 = 1;  //keeps track of the number of times a value has been stored in the array. Also keeps track of the current position in the array for calculations
+long iteration1 = 1;  //keeps track of the number of times a value has been stored in the array. Also keeps track of the current position in the array for calculations
 //unsigned int iteration2 = 1;
 //unsigned int iteration3 = 1;
-unsigned int myIteration = 1;  //keeps track of the same information, but for self
+long myIteration = 1;  //keeps track of the same information, but for self
 
-int offset1 = 0;  //stores the most recent offset value, used for calculations, calculated in the function updateOffset
+long offset1 = 0;  //stores the most recent offset value, used for calculations, calculated in the function updateOffset
 //int offset2 = 0;
 //int offset3 = 0;
 
-int avgOffset = 0;  //the average offset value calculated in the function updateAvg
+long avgOffset = 0;  //the average offset value calculated in the function updateAvg
 
-unsigned long input1[80][3];  //an array that logs a bunch of useful data for people to use
-//unsigned long input2[80][3];  //stores the time that a state change has occured, the new state, and the offset values
-//unsigned long input3[80][3];
-unsigned long myInput[80][3];
+long input1[80][3];  //an array that logs a bunch of useful data for people to use
+//long input2[80][3];  //stores the time that a state change has occured, the new state, and the offset values
+//long input3[80][3];
+long myInput[80][3];
 
-int ledState = LOW;  //an intermediate variable used in the timeToBlink to set the led state
-unsigned long previousMillis = 0;  //a variable that keeps track of the last time the led blinked, in order to properly space the next blink in timeToBlink
-unsigned long previousMillis2 = 0;  //used for the same perpose, but in the shiftMod function
+long ledState = LOW;  //an intermediate variable used in the timeToBlink to set the led state
+long previousMillis = 0;  //a variable that keeps track of the last time the led blinked, in order to properly space the next blink in timeToBlink
+long previousMillis2 = 0;  //used for the same perpose, but in the shiftMod function
 
 bool startButton = false;  //boolean variable that lets the program know when it has started based on the propagating start message
 
@@ -72,15 +72,15 @@ void loop() {
 	//checks the 3 ports
 	timeToBlink();//blinks if it is time to, IF THE STARTBUTTON BOOL IS TRUE
 	calcOffset1();
-	updateAvg();//update the average value with new data
-	shiftMod();//shift the wavelength based on the mod variable
+	//updateAvg();//update the average value with new data
+	//shiftMod();//shift the wavelength based on the mod variable
 
 	//if times out, then use last stored values...or overwrite them...?
 }
 
 void checkPort1(){
 	if(Serial1.available()){  //only reads from the port if there is available data in the buffer
-		int readValue = Serial1.read();  //reads the first value stored in the serial buffer
+		long readValue = (long) Serial1.read();  //reads the first value stored in the serial buffer
 
 		if(readValue==2){  //an if case that relays the start command to all connected fireflies the first time it recieves the start command itself
 			if(startButton==false){  //to prevent the command from looping indefinitely
@@ -97,8 +97,8 @@ void checkPort1(){
 		}
 
 		else if((readValue != input1[iteration1-1][1]) && (startButton)){  //if the reieved value is distinct from the last recieved value, and the program has "started" from recieving a 0
-			input1[iteration1][0] = millis();  //then sets the first row value of the array to the current time
-			input1[iteration1][1] = readValue;  //and the second row value to the new state of the led
+			input1[iteration1][0] = (long) millis();  //then sets the first row value of the array to the current time
+			input1[iteration1][1] = (long) readValue;  //and the second row value to the new state of the led
 			iteration1++;  //increases the tally for the number of datapoints logged
 
 			Serial.print("iteration1 = ");  //print statements for debugging
@@ -113,12 +113,12 @@ void checkPort1(){
 //void checkPort3()
 
 void timeToBlink(){
-	unsigned long currentMillis = millis();  //allows the function to compare the current time to the time recorded in previousMillis
+	long currentMillis = (long) millis();  //allows the function to compare the current time to the time recorded in previousMillis
 //Serial.print("previousMillis = ");
 //Serial.println(previousMillis);
 	if(((currentMillis - previousMillis) >= (PERIOD + mod)) && (startButton)){  //if the difference in time between the previousMillis and current time, is greater than or equal to the period of the firefly plus its modifier value; and the program has "started"
-		previousMillis = currentMillis;  //if the criteria are met, then resets the previousMillis time to the current one, in order to prep for the next cycle
-		int valueToSend = 0;  //initiates a intermediate variable for the value that will be sent across the serial ports to the other fireflies
+		previousMillis = (long) currentMillis;  //if the criteria are met, then resets the previousMillis time to the current one, in order to prep for the next cycle
+		long valueToSend = 0;  //initiates a intermediate variable for the value that will be sent across the serial ports to the other fireflies
 
 		if(ledState == LOW){  //if the current state of the led is off
 			valueToSend = 1;  //then tells the other fireflies that it is turning its led on
@@ -134,67 +134,60 @@ void timeToBlink(){
 		//Serial2.write(valueToSend);
 		//Serial3.write(valueToSend);
 
-		myInput[myIteration][0] = millis();  //logs data in the same format as the other arrays, but for self
-		myInput[myIteration][1] = valueToSend;
+		myInput[myIteration][0] = (long) millis();  //logs data in the same format as the other arrays, but for self
+		myInput[myIteration][1] = (long) valueToSend;
 		myIteration++;
 	}
 }
 
 void calcOffset1(){
 	if(iteration1 > 3){
-		unsigned int commonIteration = min(iteration1, myIteration);  //finds the least common itteration of connected firelfy1 and self, in order to find the most recent data point that may be used in calculation
+		long commonIteration = (long) min(iteration1, myIteration);  //finds the least common itteration of connected firelfy1 and self, in order to find the most recent data point that may be used in calculation
 
-		unsigned int posTemp = abs(myInput[commonIteration-1][0] - input1[commonIteration-1][0]);  //takes the distance between the two values
-
-		//Serial.print("posTemp = ");
-		//Serial.println(posTemp);
-
-		if(myInput[commonIteration-1][0] > input1[commonIteration-1][0]){  //if the time value at the common data point is greater for self
-			offset1 = (-1)*(posTemp);  //sets the offset value to the negative of the distance, because the connected firefly one must be behind self
-		}
-		else{  //if the time value for self isn't greater ==> the time value for connected firelfy1 is greater
-			offset1 = posTemp;  //sets the offset value to the distance, because the connected firefly must be ahead of self
-		}
-
+		offset1 = (long) (input1[commonIteration-1][0] - myInput[commonIteration-1][0]);
 		input1[commonIteration-1][3] = offset1;  //logs the offset value in the third row of the array
 
-		//Serial.print("offset1 = ");
-		//Serial.println(offset1);
+		if(millis()%1000 == 0){
+			Serial.print("common iteration = ");
+			Serial.println(commonIteration);
+			Serial.print("offset1 = ");
+			Serial.println(offset1);
+		}
 	}
 }
 
 void updateAvg(){
-	int tempSum = 0;  //a temporary variable for the sum of the values
-	int numberOn = 0;  //another temporary variable to store the number of "online" fireflies for the calculation of the average
+	long tempSum = 0;  //a temporary variable for the sum of the values
+	long numberOn = 0;  //another temporary variable to store the number of "online" fireflies for the calculation of the average
 
 	if(iteration1 > 3){  //ensures that the firefly is "alive"
-		tempSum += offset1;  //adds the most recently calculated offset value
+		tempSum += (long) offset1;  //adds the most recently calculated offset value
 		numberOn++;  //adds one to the tally of how many values are being averaged, in order to divide by the correct number
 	}
 
 	/*
 	if(iteration2 > 3){
-		tempSum += offset2;
+		tempSum += (long) offset2;
 		numberOn++;
 	}
 
 	if(iteration3 > 3){
-		tempSum += offset3;
+		tempSum += (long) offset3;
 		numberOn++;
 	}
 	*/
 
-	if(numberOn > 0) avgOffset = tempSum/numberOn;  //calculates the average, based on the sum variable and the number of fireflies variable
+	if(numberOn > 0) avgOffset = (long) tempSum/numberOn;  //calculates the average, based on the sum variable and the number of fireflies variable
 }
 
 void shiftMod(){
-	unsigned long currentMillis2 = millis();  //checks the current time with currentMillis, in the same way as the timeToBlink function
+	long currentMillis2 = (long) millis();  //checks the current time with currentMillis, in the same way as the timeToBlink function
 
-	if((currentMillis2 - previousMillis2) >= (1000)){  //again, like timeToBlink, checks if the difference in times has reached a certain magnitude, an arbitrary one second, then changes the mod value accordingly
-		previousMillis2 = currentMillis2;  //same as timeToBlink
+	if(((currentMillis2 - previousMillis2) >= (1000)) && (avgOffset != 0)){  //again, like timeToBlink, checks if the difference in times has reached a certain magnitude, an arbitrary one second, then changes the mod value accordingly
+		previousMillis2 = (long) currentMillis2;  //same as timeToBlink
 
-		totalMod += mod;  //keeps a tally of the total mod value, shouldn't be entirely accurate, just for debugging
-		mod = (avgOffset/2);  //sets the mod value to one half of the averageOffset, which is the average distance between self and the other fireflies at any given point, factoring in direction
+		totalMod += (long) mod;  //keeps a tally of the total mod value, shouldn't be entirely accurate, just for debugging
+		mod = (long) (avgOffset/2);  //sets the mod value to one half of the averageOffset, which is the average distance between self and the other fireflies at any given point, factoring in direction
 
 		Serial.print("mod = ");
 		Serial.println(mod);
