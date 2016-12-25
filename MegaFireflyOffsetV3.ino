@@ -88,8 +88,8 @@ void checkPort1(){
 				//Serial2.write(2);
 				//Serial3.write(3);
 				delay(PERIOD+OFFSET);  //waits the set period length, then an additional time for offset. this is how the offset variable is introduced into the system
-				previousMillis = millis();  //resets the previousMillis and previousMillis2 variables to prevent things from piling up
-				previousMillis2 = millis();
+				previousMillis = (long) millis();  //resets the previousMillis and previousMillis2 variables to prevent things from piling up
+				previousMillis2 = (long) millis();
 				Serial.println("started");  //gives an indicator in the serial monitor
 			}
 
