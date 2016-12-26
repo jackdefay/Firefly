@@ -12,18 +12,18 @@ long totalMod = OFFSET; //for troubleshooting
 
 long iteration1 = 1;  //keeps track of the number of times a value has been stored in the array. Also keeps track of the current position in the array for calculations
 long iteration2 = 1;
-//unsigned int iteration3 = 1;
+long iteration3 = 1;
 long myIteration = 1;  //keeps track of the same information, but for self
 
 long offset1 = 0;  //stores the most recent offset value, used for calculations, calculated in the function updateOffset
 long offset2 = 0;
-//int offset3 = 0;
+long offset3 = 0;
 
 long avgOffset = 0;  //the average offset value calculated in the function updateAvg
 
 long input1[80][3];  //an array that logs a bunch of useful data for people to use
 long input2[80][3];  //stores the time that a state change has occured, the new state, and the offset values
-//long input3[80][3];
+long input3[80][3];
 long myInput[80][3];
 
 long ledState = LOW;  //an intermediate variable used in the timeToBlink to set the led state
@@ -41,7 +41,7 @@ void setup() {
     	for(int j=0; j<3; j++){
   		    input1[i][j] = 0;
   		    input2[i][j] = 0;
-  	    	//input3[i][j] = 0;
+  	    	input3[i][j] = 0;
   		    myInput[i][j] = 0;
     	}
     }
@@ -49,7 +49,7 @@ void setup() {
     Serial.begin(9600);  //initiates the serial monitor
     Serial1.begin(9600);  //initiates the other 3 serial ports to listen to the connected "fireflies"
     Serial2.begin(9600);
-   // Serial3.begin(9600);
+    Serial3.begin(9600);
 
     Serial.println("*****************************************************");  //to signal the start of the program
 }
@@ -59,7 +59,7 @@ void loop() {
 	if((digitalRead(button) == HIGH) && (BUTTONPERSON == 1)){  //if the firfly reads that the connected button has been pressed, and this firefly is a designated "button person" firefly, then it relays the start signal to all the connected firelfies
 		Serial1.write(2);  //the number 2 is the designated start signal
 		Serial2.write(2);
-		//Serial3.write(2);
+		Serial3.write(2);
 		Serial.println("the firefly tried to initiate the start");
 	}
 
@@ -67,7 +67,7 @@ void loop() {
 
 	checkPort1();  //listen to the three ports on loop
 	checkPort2();
-	//checkPort3();
+	checkPort3();
 	  //if it returns a 0 or 1, log it
 	  //if it returns a 2, then initiate rest of the program with startbutton vriable
 
@@ -76,7 +76,7 @@ void loop() {
 
 	calcOffset1();
 	calcOffset2();
-	//calOffset3();
+	calOffset3();
 
 	updateAvg();//update the average value with new data
 	shiftMod();//shift the wavelength based on the mod variable
@@ -92,7 +92,7 @@ void checkPort1(){
 			if(startButton==false){  //to prevent the command from looping indefinitely
 				Serial1.write(2);  //then relays the 2 value across all of its ports
 				Serial2.write(2);
-				//Serial3.write(2);
+				Serial3.write(2);
 				delay(PERIOD+OFFSET);  //waits the set period length, then an additional time for offset. this is how the offset variable is introduced into the system
 				previousMillis = (long) millis();  //resets the previousMillis and previousMillis2 variables to prevent things from piling up
 				previousMillis2 = (long) millis();
@@ -126,9 +126,9 @@ void checkPort2(){
 
 		if(readValue==2){  //an if case that relays the start command to all connected fireflies the first time it recieves the start command itself
 			if(startButton==false){  //to prevent the command from looping indefinitely
-				Serial2.write(2);  //then relays the 2 value across all of its ports
+				Serial1.write(2);  //then relays the 2 value across all of its ports
 				Serial2.write(2);
-				//Serial3.write(2);
+				Serial3.write(2);
 				delay(PERIOD+OFFSET);  //waits the set period length, then an additional time for offset. this is how the offset variable is introduced into the system
 				previousMillis = (long) millis();  //resets the previousMillis and previousMillis2 variables to prevent things from piling up
 				previousMillis2 = (long) millis();
@@ -145,7 +145,32 @@ void checkPort2(){
 		}
 	}
 }
-//void checkPort3()
+
+void checkPort3(){
+	if(Serial3.available()){  //only reads from the port if there is available data in the buffer
+		long readValue = (long) Serial3.read();  //reads the first value stored in the serial buffer
+
+		if(readValue==2){  //an if case that relays the start command to all connected fireflies the first time it recieves the start command itself
+			if(startButton==false){  //to prevent the command from looping indefinitely
+				Serial1.write(2);  //then relays the 2 value across all of its ports
+				Serial2.write(2);
+				Serial3.write(2);
+				delay(PERIOD+OFFSET);  //waits the set period length, then an additional time for offset. this is how the offset variable is introduced into the system
+				previousMillis = (long) millis();  //resets the previousMillis and previousMillis2 variables to prevent things from piling up
+				previousMillis2 = (long) millis();
+				Serial.println("started");  //gives an indicator in the serial monitor
+			}
+
+			startButton = true;  //finally sets the startButton variable to true, initiating its other processes and locking down the loop with the (startbutton==false) if case
+		}
+
+		else if((readValue != input3[iteration3-1][1]) && (startButton)){  //if the reieved value is distinct from the last recieved value, and the program has "started" from recieving a 0
+			input3[iteration3][0] = (long) millis();  //then sets the first row value of the array to the current time
+			input3[iteration3][1] = (long) readValue;  //and the second row value to the new state of the led
+			iteration3++;  //increases the tally for the number of datapoints logged
+		}
+	}
+}
 
 void timeToBlink(){
 	long currentMillis = (long) millis();  //allows the function to compare the current time to the time recorded in previousMillis
@@ -167,7 +192,7 @@ void timeToBlink(){
 		digitalWrite(led, ledState);  //the actual action of turning the led on or off
 		Serial1.write(valueToSend);  //the action of sending the new value
 		Serial2.write(valueToSend);
-		//Serial3.write(valueToSend);
+		Serial3.write(valueToSend);
 
 		myInput[myIteration][0] = (long) millis();  //logs data in the same format as the other arrays, but for self
 		myInput[myIteration][1] = (long) valueToSend;
@@ -208,6 +233,20 @@ void calcOffset2(){
 	}
 }
 
+void calcOffset3(){
+	if(iteration3 > 3){
+		long commonIteration = (long) min(iteration3, myIteration);  //finds the least common itteration of connected firelfy1 and self, in order to find the most recent data point that may be used in calculation
+
+		offset3 = (long) (input3[commonIteration-1][0] - myInput[commonIteration-1][0]);
+		input3[commonIteration-1][2] = offset3;  //logs the offset value in the third row of the array
+
+		if(millis()%1000 == 0){
+			Serial.print("offset3 = ");
+			Serial.println(offset3);
+		}
+	}
+}
+
 void updateAvg(){
 	long tempSum = 0;  //a temporary variable for the sum of the values
 	long numberOn = 0;  //another temporary variable to store the number of "online" fireflies for the calculation of the average
@@ -222,11 +261,10 @@ void updateAvg(){
 		numberOn++;
 	}
 
-	/*if(iteration3 > 3){
+	if(iteration3 > 3){
 		tempSum += (long) offset3;
 		numberOn++;
 	}
-	*/
 
 	if(numberOn > 0) avgOffset = (long) tempSum/numberOn;  //calculates the average, based on the sum variable and the number of fireflies variable
 
