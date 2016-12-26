@@ -1,14 +1,13 @@
 //MegaFireflyOffsetV3.ino
 
 #define PERIOD 2000  //the duration of the blink in milliseconds
-#define OFFSET 400  //the initial wait time for the before the start of the algorithm
+//#define OFFSET 400  //the initial wait time for the before the start of the algorithm - OLD, only use this if need to control the initial offset value
 #define BUTTONPERSON 1 //this value will be 0 on all but one firefly, in order to initiate the start process. button person refers to a queen bee or ant, since the firefly with a 1 will serve tell all the other fireflies to start
 
 long led = 13;  //declare the pin for the led
 long button = 2;  //declare the pin for the start button, will only do something on a single firefly
 
 long mod = 0;  //this variable will be used to shift the temporal position of the blinking
-long totalMod = OFFSET; //for troubleshooting
 
 long iteration1 = 1;  //keeps track of the number of times a value has been stored in the array. Also keeps track of the current position in the array for calculations
 long iteration2 = 1;
@@ -31,6 +30,13 @@ long previousMillis = 0;  //a variable that keeps track of the last time the led
 //long previousMillis2 = 0;  //used for the same perpose, but in the shiftMod function
 
 bool startButton = false;  //boolean variable that lets the program know when it has started based on the propagating start message
+
+randomSeed(analogRead(0));  //uses the natural noise of an unconnected pin as a randomizer, sets that noise as the randomizing factor to set the initial offset
+
+long initialOffset = random(PERIOD);  //randomizes the initial offset of the system, this fuction was previously done by "OFFSET"
+//long initialOffset = OFFSET;  //old strat, leave commented out unless want to control the initial offset
+
+long totalMod = initialOffset; //for troubleshooting
 
 void setup() {
 
@@ -93,7 +99,7 @@ void checkPort1(){
 				Serial1.write(2);  //then relays the 2 value across all of its ports
 				Serial2.write(2);
 				Serial3.write(2);
-				delay(PERIOD+OFFSET);  //waits the set period length, then an additional time for offset. this is how the offset variable is introduced into the system
+				delay(PERIOD+initialOffset);  //waits the set period length, then an additional time for offset. this is how the offset variable is introduced into the system
 				previousMillis = (long) millis();  //resets the previousMillis and previousMillis2 variables to prevent things from piling up
 				//previousMillis2 = (long) millis();
 				Serial.println("started");  //gives an indicator in the serial monitor
@@ -129,7 +135,7 @@ void checkPort2(){
 				Serial1.write(2);  //then relays the 2 value across all of its ports
 				Serial2.write(2);
 				Serial3.write(2);
-				delay(PERIOD+OFFSET);  //waits the set period length, then an additional time for offset. this is how the offset variable is introduced into the system
+				delay(PERIOD+initialOffset);  //waits the set period length, then an additional time for offset. this is how the offset variable is introduced into the system
 				previousMillis = (long) millis();  //resets the previousMillis and previousMillis2 variables to prevent things from piling up
 				//previousMillis2 = (long) millis();
 				Serial.println("started");  //gives an indicator in the serial monitor
@@ -155,7 +161,7 @@ void checkPort3(){
 				Serial1.write(2);  //then relays the 2 value across all of its ports
 				Serial2.write(2);
 				Serial3.write(2);
-				delay(PERIOD+OFFSET);  //waits the set period length, then an additional time for offset. this is how the offset variable is introduced into the system
+				delay(PERIOD+initialOffset);  //waits the set period length, then an additional time for offset. this is how the offset variable is introduced into the system
 				previousMillis = (long) millis();  //resets the previousMillis and previousMillis2 variables to prevent things from piling up
 				//previousMillis2 = (long) millis();
 				Serial.println("started");  //gives an indicator in the serial monitor
