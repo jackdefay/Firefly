@@ -2,7 +2,7 @@
 
 #define PERIOD 2000  //the duration of the blink in milliseconds
 //#define OFFSET 400  //the initial wait time for the before the start of the algorithm - OLD, only use this if need to control the initial offset value
-#define BUTTONPERSON 1 //this value will be 0 on all but one firefly, in order to initiate the start process. button person refers to a queen bee or ant, since the firefly with a 1 will serve tell all the other fireflies to start
+#define BUTTONPERSON 0 //this value will be 0 on all but one firefly, in order to initiate the start process. button person refers to a queen bee or ant, since the firefly with a 1 will serve tell all the other fireflies to start
 
 long led = 13;  //declare the pin for the led
 long button = 2;  //declare the pin for the start button, will only do something on a single firefly
@@ -56,14 +56,12 @@ void setup() {
     Serial.println("*****************************************************");  //to signal the start of the program
 }
 
-//have to put this here because the random seed has to be in the setup function, but these must be global variables...so its kinda weird but this should work
-
-long initialOffset = (long) random(PERIOD);  //randomizes the initial offset of the system, this fuction was previously done by "OFFSET"
-//long initialOffset = OFFSET;  //old strat, leave commented out unless want to control the initial offset
-
-long totalMod = initialOffset; //for troubleshooting
-
 void loop() {
+
+	static long initialOffset = (long) random(PERIOD);  //randomizes the initial offset of the system, this fuction was previously done by "OFFSET"
+	//long initialOffset = OFFSET;  //old strat, leave commented out unless want to control the initial offset
+
+	//if(millis()%1000 == 0) Serial.println(initialOffset);
 
 	if((digitalRead(button) == HIGH) && (BUTTONPERSON == 1)){  //if the firfly reads that the connected button has been pressed, and this firefly is a designated "button person" firefly, then it relays the start signal to all the connected firelfies
 		Serial1.write(2);  //the number 2 is the designated start signal
@@ -74,9 +72,9 @@ void loop() {
 
 	if(mod > PERIOD || mod < (-1*PERIOD)) Serial.println("MOD IS SPIRALLING OUT OF CONTROL!");  //a debugging check that prints whenever the mod value overtakes the period, which should never be necessary if the initial offset values are less that the period
 
-	checkPort1();  //listen to the three ports on loop
-	checkPort2();
-	checkPort3();
+	checkPort1(initialOffset);  //listen to the three ports on loop
+	checkPort2(initialOffset);
+	checkPort3(initialOffset);
 	  //if it returns a 0 or 1, log it
 	  //if it returns a 2, then initiate rest of the program with startbutton vriable
 
@@ -89,7 +87,7 @@ void loop() {
 
 	updateAvg();//update the average value with new data
 
-	Serial.print(millis());  //outputs the millisecond time, the three offset values, and the average offset
+	/*Serial.print(millis());  //outputs the millisecond time, the three offset values, and the average offset
 	Serial.print(",");		 //remember self has an offset of 0, so the variance from the mean can still be determined
 	Serial.print(offset1);	 //next copy the serial monitor data to a text file in comma format
 	Serial.print(",");		 //then upload that text file to a google sheet to interpret and graph the data
@@ -97,14 +95,14 @@ void loop() {
 	Serial.print(",");
 	Serial.print(offset3);
 	Serial.print(",");
-	Serial.println(avgOffset);
+	Serial.println(avgOffset);*/
 
 	shiftMod();//shift the wavelength based on the mod variable
 
 	//if times out, then use last stored values...or overwrite them...?
 }
 
-void checkPort1(){
+void checkPort1(long initialOffset){
 	if(Serial1.available()){  //only reads from the port if there is available data in the buffer
 		long readValue = (long) Serial1.read();  //reads the first value stored in the serial buffer
 
@@ -140,7 +138,7 @@ void checkPort1(){
 	}
 }
 
-void checkPort2(){
+void checkPort2(long initialOffset){
 	if(Serial2.available()){  //only reads from the port if there is available data in the buffer
 		long readValue = (long) Serial2.read();  //reads the first value stored in the serial buffer
 
@@ -166,7 +164,7 @@ void checkPort2(){
 	}
 }
 
-void checkPort3(){
+void checkPort3(long initialOffset){
 	if(Serial3.available()){  //only reads from the port if there is available data in the buffer
 		long readValue = (long) Serial3.read();  //reads the first value stored in the serial buffer
 
@@ -300,12 +298,11 @@ void shiftMod(){
 	if(/*((currentMillis2 - previousMillis2) >= (1000)) && */(avgOffset != 0)){  //again, like timeToBlink, checks if the difference in times has reached a certain magnitude, an arbitrary one second, then changes the mod value accordingly
 		//previousMillis2 = (long) currentMillis2;  //same as timeToBlink
 
-		totalMod += (long) mod;  //keeps a tally of the total mod value, shouldn't be entirely accurate, just for debugging
 		mod = (long) (avgOffset/10);  //sets the mod value to one half of the averageOffset, which is the average distance between self and the other fireflies at any given point, factoring in direction
 
 		//Serial.print("mod = ");
 		//Serial.println(mod);
 
-		//if(mod==0  && iteration1>3 /*&& iteration2>3 && iteration3>3*/) Serial.println("SYNCHRONIZED!");
+		if(mod==0  && iteration1>3 && iteration2>3 && iteration3>3) Serial.println("SYNCHRONIZED!");
 	}
 }
