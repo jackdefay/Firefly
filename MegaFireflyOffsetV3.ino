@@ -1,7 +1,7 @@
 //MegaFireflyOffsetV3.ino
 
 #define PERIOD 2000  //the duration of the blink in milliseconds
-#define OFFSET 1000  //the initial wait time for the before the start of the algorithm
+#define OFFSET 400  //the initial wait time for the before the start of the algorithm
 #define BUTTONPERSON 1 //this value will be 0 on all but one firefly, in order to initiate the start process. button person refers to a queen bee or ant, since the firefly with a 1 will serve tell all the other fireflies to start
 
 long led = 13;  //declare the pin for the led
@@ -28,7 +28,7 @@ long myInput[80][3];
 
 long ledState = LOW;  //an intermediate variable used in the timeToBlink to set the led state
 long previousMillis = 0;  //a variable that keeps track of the last time the led blinked, in order to properly space the next blink in timeToBlink
-long previousMillis2 = 0;  //used for the same perpose, but in the shiftMod function
+//long previousMillis2 = 0;  //used for the same perpose, but in the shiftMod function
 
 bool startButton = false;  //boolean variable that lets the program know when it has started based on the propagating start message
 
@@ -76,7 +76,7 @@ void loop() {
 
 	calcOffset1();
 	calcOffset2();
-	calOffset3();
+	calcOffset3();
 
 	updateAvg();//update the average value with new data
 	shiftMod();//shift the wavelength based on the mod variable
@@ -95,7 +95,7 @@ void checkPort1(){
 				Serial3.write(2);
 				delay(PERIOD+OFFSET);  //waits the set period length, then an additional time for offset. this is how the offset variable is introduced into the system
 				previousMillis = (long) millis();  //resets the previousMillis and previousMillis2 variables to prevent things from piling up
-				previousMillis2 = (long) millis();
+				//previousMillis2 = (long) millis();
 				Serial.println("started");  //gives an indicator in the serial monitor
 			}
 
@@ -131,7 +131,7 @@ void checkPort2(){
 				Serial3.write(2);
 				delay(PERIOD+OFFSET);  //waits the set period length, then an additional time for offset. this is how the offset variable is introduced into the system
 				previousMillis = (long) millis();  //resets the previousMillis and previousMillis2 variables to prevent things from piling up
-				previousMillis2 = (long) millis();
+				//previousMillis2 = (long) millis();
 				Serial.println("started");  //gives an indicator in the serial monitor
 			}
 
@@ -157,7 +157,7 @@ void checkPort3(){
 				Serial3.write(2);
 				delay(PERIOD+OFFSET);  //waits the set period length, then an additional time for offset. this is how the offset variable is introduced into the system
 				previousMillis = (long) millis();  //resets the previousMillis and previousMillis2 variables to prevent things from piling up
-				previousMillis2 = (long) millis();
+				//previousMillis2 = (long) millis();
 				Serial.println("started");  //gives an indicator in the serial monitor
 			}
 
@@ -210,12 +210,12 @@ void calcOffset1(){
 		offset1 = (long) (input1[commonIteration-1][0] - myInput[commonIteration-1][0]);
 		input1[commonIteration-1][2] = offset1;  //logs the offset value in the third row of the array
 
-		if(millis()%1000 == 0){
-			//Serial.print("common iteration = ");
-			//Serial.println(commonIteration);
+		/*if(millis()%1000 == 0){
+			Serial.print("common iteration = ");
+			Serial.println(commonIteration);
 			Serial.print("offset1 = ");
 			Serial.println(offset1);
-		}
+		}*/
 	}
 }
 
@@ -226,10 +226,10 @@ void calcOffset2(){
 		offset2 = (long) (input2[commonIteration-1][0] - myInput[commonIteration-1][0]);
 		input2[commonIteration-1][2] = offset2;  //logs the offset value in the third row of the array
 
-		if(millis()%1000 == 0){
+		/*if(millis()%1000 == 0){
 			Serial.print("offset2 = ");
 			Serial.println(offset2);
-		}
+		}*/
 	}
 }
 
@@ -240,10 +240,10 @@ void calcOffset3(){
 		offset3 = (long) (input3[commonIteration-1][0] - myInput[commonIteration-1][0]);
 		input3[commonIteration-1][2] = offset3;  //logs the offset value in the third row of the array
 
-		if(millis()%1000 == 0){
+		/*if(millis()%1000 == 0){
 			Serial.print("offset3 = ");
 			Serial.println(offset3);
-		}
+		}*/
 	}
 }
 
@@ -268,22 +268,22 @@ void updateAvg(){
 
 	if(numberOn > 0) avgOffset = (long) tempSum/numberOn;  //calculates the average, based on the sum variable and the number of fireflies variable
 
-	if(millis()%1000 == 0){
+	/*if(millis()%1000 == 0){
 		Serial.print("avgOffset= ");
 		Serial.println(avgOffset);
-	}
+	}*/
 }
 
 void shiftMod(){
-	long currentMillis2 = (long) millis();  //checks the current time with currentMillis, in the same way as the timeToBlink function
+	//long currentMillis2 = (long) millis();  //checks the current time with currentMillis, in the same way as the timeToBlink function
 
-	if(((currentMillis2 - previousMillis2) >= (1000)) && (avgOffset != 0)){  //again, like timeToBlink, checks if the difference in times has reached a certain magnitude, an arbitrary one second, then changes the mod value accordingly
-		previousMillis2 = (long) currentMillis2;  //same as timeToBlink
+	if(/*((currentMillis2 - previousMillis2) >= (1000)) && */(avgOffset != 0)){  //again, like timeToBlink, checks if the difference in times has reached a certain magnitude, an arbitrary one second, then changes the mod value accordingly
+		//previousMillis2 = (long) currentMillis2;  //same as timeToBlink
 
 		totalMod += (long) mod;  //keeps a tally of the total mod value, shouldn't be entirely accurate, just for debugging
-		mod = (long) (avgOffset/2);  //sets the mod value to one half of the averageOffset, which is the average distance between self and the other fireflies at any given point, factoring in direction
+		mod = (long) (avgOffset/10);  //sets the mod value to one half of the averageOffset, which is the average distance between self and the other fireflies at any given point, factoring in direction
 
-		Serial.print("mod = ");
+		//Serial.print("mod = ");
 		Serial.println(mod);
 
 		if(mod==0  && iteration1>3 /*&& iteration2>3 && iteration3>3*/) Serial.println("SYNCHRONIZED!");
