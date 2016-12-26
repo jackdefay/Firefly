@@ -87,7 +87,7 @@ void loop() {
 
 	updateAvg();//update the average value with new data
 
-	/*Serial.print(millis());  //outputs the millisecond time, the three offset values, and the average offset
+	Serial.print(millis());  //outputs the millisecond time, the three offset values, and the average offset
 	Serial.print(",");		 //remember self has an offset of 0, so the variance from the mean can still be determined
 	Serial.print(offset1);	 //next copy the serial monitor data to a text file in comma format
 	Serial.print(",");		 //then upload that text file to a google sheet to interpret and graph the data
@@ -95,7 +95,7 @@ void loop() {
 	Serial.print(",");
 	Serial.print(offset3);
 	Serial.print(",");
-	Serial.println(avgOffset);*/
+	Serial.println(avgOffset);
 
 	shiftMod();//shift the wavelength based on the mod variable
 
@@ -293,16 +293,18 @@ void updateAvg(){
 }
 
 void shiftMod(){
-	//long currentMillis2 = (long) millis();  //checks the current time with currentMillis, in the same way as the timeToBlink function
+	if(avgOffset != 0) mod = (long) (avgOffset/2);
 
-	if(/*((currentMillis2 - previousMillis2) >= (1000)) && */(avgOffset != 0)){  //again, like timeToBlink, checks if the difference in times has reached a certain magnitude, an arbitrary one second, then changes the mod value accordingly
-		//previousMillis2 = (long) currentMillis2;  //same as timeToBlink
+	/*long currentMillis2 = (long) millis();  //checks the current time with currentMillis, in the same way as the timeToBlink function
+
+	if(((currentMillis2 - previousMillis2) >= (1000)) && (avgOffset != 0)){  //again, like timeToBlink, checks if the difference in times has reached a certain magnitude, an arbitrary one second, then changes the mod value accordingly
+		previousMillis2 = (long) currentMillis2;  //same as timeToBlink
 
 		mod = (long) (avgOffset/10);  //sets the mod value to one half of the averageOffset, which is the average distance between self and the other fireflies at any given point, factoring in direction
 
 		//Serial.print("mod = ");
 		//Serial.println(mod);
 
-		if(mod==0  && iteration1>3 && iteration2>3 && iteration3>3) Serial.println("SYNCHRONIZED!");
-	}
+		//if(mod==0  && iteration1>3 && iteration2>3 && iteration3>3) Serial.println("SYNCHRONIZED!");
+	}*/
 }
