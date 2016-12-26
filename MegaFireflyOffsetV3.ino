@@ -48,10 +48,10 @@ void setup() {
     randomSeed(analogRead(0));  //uses the natural noise of an unconnected pin as a randomizer, sets that noise as the randomizing factor to set the initial offset
 
 
-    Serial.begin(9600);  //initiates the serial monitor
-    Serial1.begin(9600);  //initiates the other 3 serial ports to listen to the connected "fireflies"
-    Serial2.begin(9600);
-    Serial3.begin(9600);
+    Serial.begin(115200);  //initiates the serial monitor
+    Serial1.begin(115200);  //initiates the other 3 serial ports to listen to the connected "fireflies"
+    Serial2.begin(115200);
+    Serial3.begin(115200);
 
     Serial.println("*****************************************************");  //to signal the start of the program
 }
@@ -88,6 +88,17 @@ void loop() {
 	calcOffset3();
 
 	updateAvg();//update the average value with new data
+
+	Serial.print(millis());  //outputs the millisecond time, the three offset values, and the average offset
+	Serial.print(",");		 //remember self has an offset of 0, so the variance from the mean can still be determined
+	Serial.print(offset1);	 //next copy the serial monitor data to a text file in comma format
+	Serial.print(",");		 //then upload that text file to a google sheet to interpret and graph the data
+	Serial.print(offset2);
+	Serial.print(",");
+	Serial.print(offset3);
+	Serial.print(",");
+	Serial.println(avgOffset);
+
 	shiftMod();//shift the wavelength based on the mod variable
 
 	//if times out, then use last stored values...or overwrite them...?
@@ -293,8 +304,8 @@ void shiftMod(){
 		mod = (long) (avgOffset/10);  //sets the mod value to one half of the averageOffset, which is the average distance between self and the other fireflies at any given point, factoring in direction
 
 		//Serial.print("mod = ");
-		Serial.println(mod);
+		//Serial.println(mod);
 
-		if(mod==0  && iteration1>3 /*&& iteration2>3 && iteration3>3*/) Serial.println("SYNCHRONIZED!");
+		//if(mod==0  && iteration1>3 /*&& iteration2>3 && iteration3>3*/) Serial.println("SYNCHRONIZED!");
 	}
 }
