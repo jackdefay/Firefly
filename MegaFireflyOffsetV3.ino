@@ -91,7 +91,7 @@ void checkPort1(){
 		if(readValue==2){  //an if case that relays the start command to all connected fireflies the first time it recieves the start command itself
 			if(startButton==false){  //to prevent the command from looping indefinitely
 				Serial1.write(2);  //then relays the 2 value across all of its ports
-				//Serial2.write(2);
+				Serial2.write(2);
 				//Serial3.write(2);
 				delay(PERIOD+OFFSET);  //waits the set period length, then an additional time for offset. this is how the offset variable is introduced into the system
 				previousMillis = (long) millis();  //resets the previousMillis and previousMillis2 variables to prevent things from piling up
@@ -127,7 +127,7 @@ void checkPort2(){
 		if(readValue==2){  //an if case that relays the start command to all connected fireflies the first time it recieves the start command itself
 			if(startButton==false){  //to prevent the command from looping indefinitely
 				Serial2.write(2);  //then relays the 2 value across all of its ports
-				//Serial2.write(2);
+				Serial2.write(2);
 				//Serial3.write(2);
 				delay(PERIOD+OFFSET);  //waits the set period length, then an additional time for offset. this is how the offset variable is introduced into the system
 				previousMillis = (long) millis();  //resets the previousMillis and previousMillis2 variables to prevent things from piling up
