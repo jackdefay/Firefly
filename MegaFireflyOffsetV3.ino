@@ -31,13 +31,6 @@ long previousMillis = 0;  //a variable that keeps track of the last time the led
 
 bool startButton = false;  //boolean variable that lets the program know when it has started based on the propagating start message
 
-randomSeed(analogRead(0));  //uses the natural noise of an unconnected pin as a randomizer, sets that noise as the randomizing factor to set the initial offset
-
-long initialOffset = random(PERIOD);  //randomizes the initial offset of the system, this fuction was previously done by "OFFSET"
-//long initialOffset = OFFSET;  //old strat, leave commented out unless want to control the initial offset
-
-long totalMod = initialOffset; //for troubleshooting
-
 void setup() {
 
     pinMode(led, OUTPUT);
@@ -52,6 +45,9 @@ void setup() {
     	}
     }
 
+    randomSeed(analogRead(0));  //uses the natural noise of an unconnected pin as a randomizer, sets that noise as the randomizing factor to set the initial offset
+
+
     Serial.begin(9600);  //initiates the serial monitor
     Serial1.begin(9600);  //initiates the other 3 serial ports to listen to the connected "fireflies"
     Serial2.begin(9600);
@@ -59,6 +55,13 @@ void setup() {
 
     Serial.println("*****************************************************");  //to signal the start of the program
 }
+
+//have to put this here because the random seed has to be in the setup function, but these must be global variables...so its kinda weird but this should work
+
+long initialOffset = (long) random(PERIOD);  //randomizes the initial offset of the system, this fuction was previously done by "OFFSET"
+//long initialOffset = OFFSET;  //old strat, leave commented out unless want to control the initial offset
+
+long totalMod = initialOffset; //for troubleshooting
 
 void loop() {
 
