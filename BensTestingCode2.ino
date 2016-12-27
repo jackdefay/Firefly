@@ -2,10 +2,8 @@
 
 #define PERIOD 2000  //the duration of the blink in milliseconds
 //#define OFFSET 400  //the initial wait time for the before the start of the algorithm - OLD, only use this if need to control the initial offset value
-#define BUTTONPERSON 0 //this value will be 0 on all but one firefly, in order to initiate the start process. button person refers to a queen bee or ant, since the firefly with a 1 will serve tell all the other fireflies to start
+#define BUTTONPERSON 1 //this value will be 0 on all but one firefly, in order to initiate the start process. button person refers to a queen bee or ant, since the firefly with a 1 will serve tell all the other fireflies to start
 #define BENSVARIABLE 2
-
-int loopnumber = 1;
 
 bool DataCollected = false;
 
@@ -59,7 +57,7 @@ void setup() {
     Serial2.begin(115200);
     Serial3.begin(115200);
 
-    Serial.println("*****************************************************");  //to signal the start of the program
+    //Serial.println("*****************************************************");  //to signal the start of the program
 }
 
 void loop() {
@@ -67,7 +65,7 @@ void loop() {
 	static long initialOffset = (long) random(PERIOD);  //randomizes the initial offset of the system, this fuction was previously done by "OFFSET"
 	//long initialOffset = OFFSET;  //old strat, leave commented out unless want to control the initial offset
 
-	if(millis()%1000 == 0) Serial.println(initialOffset);
+	//if(millis()%1000 == 0) Serial.println(initialOffset);
 
 	if((digitalRead(button) == HIGH) && (BUTTONPERSON == 1)){  //if the firfly reads that the connected button has been pressed, and this firefly is a designated "button person" firefly, then it relays the start signal to all the connected firelfies
 		Serial1.write(2);  //the number 2 is the designated start signal
@@ -98,12 +96,12 @@ void loop() {
 	//if times out, then use last stored values...or overwrite them...?
 	
 	if(oldIteration1 != iteration1){
-		loopnumber++;
 		oldIteration1=iteration1;
 	}
 
-	if(loopnumber >= 80)
+	if(DataCollected == true)
 	{
+		delay(100);
 		asm volatile ("  jmp 0");
 	}
 }
@@ -120,7 +118,7 @@ void checkPort1(long initialOffset){
 				delay(PERIOD+initialOffset);  //waits the set period length, then an additional time for offset. this is how the offset variable is introduced into the system
 				previousMillis = (long) millis();  //resets the previousMillis and previousMillis2 variables to prevent things from piling up
 				//previousMillis2 = (long) millis();
-				//Serial.println("started");  //gives an indicator in the serial monitor
+				//Serial.println("started");  //gives an indicator in the serial monitorh
 			}
 
 			startButton = true;  //finally sets the startButton variable to true, initiating its other processes and locking down the loop with the (startbutton==false) if case
