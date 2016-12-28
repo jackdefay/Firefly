@@ -2,7 +2,6 @@
 
 #define PERIOD 2000  //the duration of the blink in milliseconds
 //#define OFFSET 400  //the initial wait time for the before the start of the algorithm - OLD, only use this if need to control the initial offset value
-#define BUTTONPERSON 0 //this value will be 0 on all but one firefly, in order to initiate the start process. button person refers to a queen bee or ant, since the firefly with a 1 will serve tell all the other fireflies to start
 //#define MAXDIVISOR 10  //the max divisor value if one uses random divisors, would make for an interesting test
 #define DIVISOR 2
 
@@ -31,7 +30,8 @@ long ledState = LOW;  //an intermediate variable used in the timeToBlink to set 
 long previousMillis = 0;  //a variable that keeps track of the last time the led blinked, in order to properly space the next blink in timeToBlink
 //long previousMillis2 = 0;  //used for the same perpose, but in the shiftMod function
 
-bool startButton = false;  //boolean variable that lets the program know when it has started based on the propagating start message
+bool startRelay = false;  //boolean variable that lets the program know when it has started based on the propagating start message
+bool thisFireflyHasStarted = false;
 
 void setup() {
 
@@ -64,13 +64,18 @@ void loop() {
 	static long divisor = DIVISOR;  //sets the divisor value, which is then passed into the shiftMod callbackFunction
 	//static long divisor = (long) random(MAXDIVISOR);  //where the divisor value is calculated if random divisors are used
 
-	long systemTime = (long) millis();
+	long systemTime = (long) millis();  //takes the time at the beginning of each loop of "void loop()" to pass to the funcions, so every function uses the same time each loop
 
-	if((digitalRead(button) == HIGH) && (BUTTONPERSON == 1)){  //if the firfly reads that the connected button has been pressed, and this firefly is a designated "button person" firefly, then it relays the start signal to all the connected firelfies
+	if(((digitalRead(button) == HIGH) || (startRelay)) && (thisFireflyHasStarted == false)){  //if the firfly reads that the connected button has been pressed, and this firefly is a designated "button person" firefly, then it relays the start signal to all the connected firelfies
 		Serial1.write(2);  //the number 2 is the designated start signal
 		Serial2.write(2);
 		Serial3.write(2);
-		Serial.println("the firefly tried to initiate the start");
+
+		delay(PERIOD+initialOffset);  //waits the set period length, then an additional time for offset. this is how the offset variable is introduced into the system
+		previousMillis = (long) systemTime;  //resets the previousMillis and previousMillis2 variables to prevent things from piling up
+		Serial.println("started");  //gives an indicator in the serial monitor
+
+		thisFireflyHasStarted = true;
 	}
 
 	if((mod > PERIOD) || (mod < (-1*PERIOD))) Serial.println("MOD IS SPIRALLING OUT OF CONTROL!");  //a debugging check that prints whenever the mod value overtakes the period, which should never be necessary if the initial offset values are less that the period
@@ -97,19 +102,10 @@ void checkPort1(long initialOffset, long systemTime){
 		long readValue = (long) Serial1.read();  //reads the first value stored in the serial buffer
 
 		if(readValue==2){  //an if case that relays the start command to all connected fireflies the first time it recieves the start command itself
-			if(startButton==false){  //to prevent the command from looping indefinitely
-				Serial1.write(2);  //then relays the 2 value across all of its ports
-				Serial2.write(2);
-				Serial3.write(2);
-				delay(PERIOD+initialOffset);  //waits the set period length, then an additional time for offset. this is how the offset variable is introduced into the system
-				previousMillis = (long) systemTime;  //resets the previousMillis and previousMillis2 variables to prevent things from piling up
-				Serial.println("started");  //gives an indicator in the serial monitor
-			}
-
-			startButton = true;  //finally sets the startButton variable to true, initiating its other processes and locking down the loop with the (startbutton==false) if case
+			startRelay = true;  //finally sets the startRelay variable to true, initiating its other processes and locking down the loop with the (startbutton==false) if case
 		}
 
-		else if((readValue != input1[iteration1-1][1]) && (startButton)){  //if the reieved value is distinct from the last recieved value, and the program has "started" from recieving a 0
+		else if((readValue != input1[iteration1-1][1]) && (thisFireflyHasStarted)){  //if the reieved value is distinct from the last recieved value, and the program has "started" from recieving a 0
 			input1[iteration1][0] = (long) systemTime;  //then sets the first row value of the array to the current time
 			input1[iteration1][1] = (long) readValue;  //and the second row value to the new state of the led
 			iteration1++;  //increases the tally for the number of datapoints logged
@@ -122,19 +118,10 @@ void checkPort2(long initialOffset, long systemTime){
 		long readValue = (long) Serial2.read();  //reads the first value stored in the serial buffer
 
 		if(readValue==2){  //an if case that relays the start command to all connected fireflies the first time it recieves the start command itself
-			if(startButton==false){  //to prevent the command from looping indefinitely
-				Serial1.write(2);  //then relays the 2 value across all of its ports
-				Serial2.write(2);
-				Serial3.write(2);
-				delay(PERIOD+initialOffset);  //waits the set period length, then an additional time for offset. this is how the offset variable is introduced into the system
-				previousMillis = (long) systemTime;  //resets the previousMillis and previousMillis2 variables to prevent things from piling up
-				Serial.println("started");  //gives an indicator in the serial monitor
-			}
-
-			startButton = true;  //finally sets the startButton variable to true, initiating its other processes and locking down the loop with the (startbutton==false) if case
+			startRelay = true;  //finally sets the startRelay variable to true, initiating its other processes and locking down the loop with the (startbutton==false) if case
 		}
 
-		else if((readValue != input2[iteration2-1][1]) && (startButton)){  //if the reieved value is distinct from the last recieved value, and the program has "started" from recieving a 0
+		else if((readValue != input2[iteration2-1][1]) && (thisFireflyHasStarted)){  //if the reieved value is distinct from the last recieved value, and the program has "started" from recieving a 0
 			input2[iteration2][0] = (long) systemTime;  //then sets the first row value of the array to the current time
 			input2[iteration2][1] = (long) readValue;  //and the second row value to the new state of the led
 			iteration2++;  //increases the tally for the number of datapoints logged
@@ -147,19 +134,10 @@ void checkPort3(long initialOffset, long systemTime){
 		long readValue = (long) Serial3.read();  //reads the first value stored in the serial buffer
 
 		if(readValue==2){  //an if case that relays the start command to all connected fireflies the first time it recieves the start command itself
-			if(startButton==false){  //to prevent the command from looping indefinitely
-				Serial1.write(2);  //then relays the 2 value across all of its ports
-				Serial2.write(2);
-				Serial3.write(2);
-				delay(PERIOD+initialOffset);  //waits the set period length, then an additional time for offset. this is how the offset variable is introduced into the system
-				previousMillis = (long) millis();  //resets the previousMillis and previousMillis2 variables to prevent things from piling up
-				Serial.println("started");  //gives an indicator in the serial monitor
-			}
-
-			startButton = true;  //finally sets the startButton variable to true, initiating its other processes and locking down the loop with the (startbutton==false) if case
+			startRelay= true;  //finally sets the startRelay variable to true, initiating its other processes and locking down the loop with the (startbutton==false) if case
 		}
 
-		else if((readValue != input3[iteration3-1][1]) && (startButton)){  //if the reieved value is distinct from the last recieved value, and the program has "started" from recieving a 0
+		else if((readValue != input3[iteration3-1][1]) && (thisFireflyHasStarted)){  //if the reieved value is distinct from the last recieved value, and the program has "started" from recieving a 0
 			input3[iteration3][0] = (long) systemTime;  //then sets the first row value of the array to the current time
 			input3[iteration3][1] = (long) readValue;  //and the second row value to the new state of the led
 			iteration3++;  //increases the tally for the number of datapoints logged
@@ -170,7 +148,7 @@ void checkPort3(long initialOffset, long systemTime){
 void timeToBlink(long systemTime){
 	long currentMillis = (long) systemTime;  //allows the function to compare the current time to the time recorded in previousMillis
 
-	if(((currentMillis - previousMillis) >= (PERIOD + mod)) && (startButton)){  //if the difference in time between the previousMillis and current time, is greater than or equal to the period of the firefly plus its modifier value; and the program has "started"
+	if(((currentMillis - previousMillis) >= (PERIOD + mod)) && (thisFireflyHasStarted)){  //if the difference in time between the previousMillis and current time, is greater than or equal to the period of the firefly plus its modifier value; and the program has "started"
 		previousMillis = (long) currentMillis;  //if the criteria are met, then resets the previousMillis time to the current one, in order to prep for the next cycle
 		long valueToSend = 0;  //initiates a intermediate variable for the value that will be sent across the serial ports to the other fireflies
 
