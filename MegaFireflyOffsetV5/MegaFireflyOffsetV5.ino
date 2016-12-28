@@ -87,9 +87,11 @@ void loop() {
 		thisFireflyHasStarted = true;
 
 		delay(initialOffset);  //delays for an additional time for offset. this is how the offset variable is introduced into the system
+
+		startRelay = false;
 	}
 
-	if((((digitalRead(syncButtonOn) == HIGH) || (syncRelayOn)) && (inSynchronizingMode == false))){
+	if(((digitalRead(syncButtonOn) == HIGH) || (syncRelayOn) ) && (inSynchronizingMode == false)){
 		Serial1.write(3);
 		Serial2.write(3);
 		Serial3.write(3);
@@ -99,9 +101,10 @@ void loop() {
 		previousMillis = (long) systemTime;
 
 		inSynchronizingMode = true;
+		syncRelayOn = false;
 	}
 
-	if((((digitalRead(syncButtonOff) == HIGH) || (syncRelayOff)) && (inSynchronizingMode == true))){
+	if(((digitalRead(syncButtonOff) == HIGH) || (syncRelayOff)) && (inSynchronizingMode == true)){
 		Serial1.write(4);
 		Serial2.write(4);
 		Serial3.write(4);
@@ -111,6 +114,7 @@ void loop() {
 		previousMillis = (long) systemTime;
 
 		inSynchronizingMode = false;
+		SyncRelayOff = false;
 	}
 
 	if((mod > PERIOD) || (mod < (-1*PERIOD))) Serial.println("MOD IS SPIRALLING OUT OF CONTROL!");  //a debugging check that prints whenever the mod value overtakes the period, which should never be necessary if the initial offset values are less that the period
