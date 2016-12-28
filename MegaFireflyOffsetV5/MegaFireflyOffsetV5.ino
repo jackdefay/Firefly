@@ -102,6 +102,13 @@ void loop() {
 
 		inSynchronizingMode = true;
 		syncRelayOn = false;
+
+		Serial1.end();
+		Serial2.end();
+		Serial3.end();
+		Serial1.begin(115200);
+		Serial2.begin(115200);
+		Serial3.begin(115200);
 	}
 
 	if(((digitalRead(syncButtonOff) == HIGH) || (syncRelayOff)) && (inSynchronizingMode == true)){
@@ -115,6 +122,13 @@ void loop() {
 
 		inSynchronizingMode = false;
 		syncRelayOff = false;
+
+		Serial1.end();
+		Serial2.end();
+		Serial3.end();
+		Serial1.begin(115200);
+		Serial2.begin(115200);
+		Serial3.begin(115200);
 	}
 
 	if((mod > PERIOD) || (mod < (-1*PERIOD))) Serial.println("MOD IS SPIRALLING OUT OF CONTROL!");  //a debugging check that prints whenever the mod value overtakes the period, which should never be necessary if the initial offset values are less that the period
