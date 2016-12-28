@@ -95,8 +95,6 @@ void loop() {
 
 	//if times out, then use last stored values...or overwrite them...?
 
-	Serial.println(avgOffset);
-
 	if(DataCollected == true)
 	{
 		Serial1.write(3);  //the number 3 is the designated restart signal
@@ -138,7 +136,7 @@ void checkPort1(long initialOffset){
 			startButton = true;  //finally sets the startButton variable to true, initiating its other processes and locking down the loop with the (startbutton==false) if case
 		}
 
-		if((readValue==3) && (DataCollected == false)){  //an if case that relays the start command to all connected fireflies the first time it recieves the start command itself
+		else if((readValue==3) && (DataCollected == false)){  //an if case that relays the start command to all connected fireflies the first time it recieves the start command itself
 			DataCollected = true;
 		}
 
@@ -178,7 +176,7 @@ void checkPort2(long initialOffset){
 			startButton = true;  //finally sets the startButton variable to true, initiating its other processes and locking down the loop with the (startbutton==false) if case
 		}
 
-		if((readValue==3) && (DataCollected == false)){  //an if case that relays the start command to all connected fireflies the first time it recieves the start command itself
+		else if((readValue==3) && (DataCollected == false)){  //an if case that relays the start command to all connected fireflies the first time it recieves the start command itself
 			DataCollected = true;
 		}
 
@@ -208,7 +206,7 @@ void checkPort3(long initialOffset){
 			startButton = true;  //finally sets the startButton variable to true, initiating its other processes and locking down the loop with the (startbutton==false) if case
 		}
 
-		if((readValue==3) && (DataCollected == false)){  //an if case that relays the start command to all connected fireflies the first time it recieves the start command itself
+		else if((readValue==3) && (DataCollected == false)){  //an if case that relays the start command to all connected fireflies the first time it recieves the start command itself
 			DataCollected = true;
 		}
 
