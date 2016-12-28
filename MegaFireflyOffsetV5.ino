@@ -79,11 +79,13 @@ void loop() {
 		Serial2.write(2);
 		Serial3.write(2);
 
-		delay(PERIOD+initialOffset);  //waits the set period length, then an additional time for offset. this is how the offset variable is introduced into the system
+		delay(PERIOD);  //waits the set period length
 		previousMillis = (long) systemTime;  //resets the previousMillis and previousMillis2 variables to prevent things from piling up
 		Serial.println("started");  //gives an indicator in the serial monitor
 
 		thisFireflyHasStarted = true;
+
+		delay(initialOffset);  //delays for an additional time for offset. this is how the offset variable is introduced into the system
 	}
 
 	if(((digitalRead(syncButtonOn) == HIGH) || (syncRelay) && (inSynchronizingMode == false))){
@@ -91,8 +93,8 @@ void loop() {
 		Serial2.write(3);
 		Serial3.write(3);
 
-		Serial.println("This firefly is going to wait for a second before starting to synchronize");
-		delay(1000);
+		Serial.println("This firefly is going to wait for the duration of one Period before starting to synchronize");
+		delay(PERIOD);
 		previousMillis = (long) systemTime;
 
 		inSynchronizingMode = true;
@@ -103,8 +105,8 @@ void loop() {
 		Serial2.write(4);
 		Serial3.write(4);
 
-		Serial.println("This firefly is going to wait for a second before resuming without synchronizing");
-		delay(1000);
+		Serial.println("This firefly is going to wait for the duration of one Period before resuming without synchronizing");
+		delay(PERIOD);
 		previousMillis = (long) systemTime;
 
 		inSynchronizingMode = false;
