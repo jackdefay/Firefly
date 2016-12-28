@@ -88,7 +88,7 @@ void loop() {
 		delay(initialOffset);  //delays for an additional time for offset. this is how the offset variable is introduced into the system
 	}
 
-	if(((digitalRead(syncButtonOn) == HIGH) || (syncRelay) && (inSynchronizingMode == false))){
+	if((((digitalRead(syncButtonOn) == HIGH) || (syncRelay)) && (inSynchronizingMode == false))){
 		Serial1.write(3);
 		Serial2.write(3);
 		Serial3.write(3);
@@ -100,7 +100,7 @@ void loop() {
 		inSynchronizingMode = true;
 	}
 
-	if(((digitalRead(syncButtonOff) == HIGH) || (syncRelay) && (inSynchronizingMode == true))){
+	if((((digitalRead(syncButtonOff) == HIGH) || (syncRelay)) && (inSynchronizingMode == true))){
 		Serial1.write(4);
 		Serial2.write(4);
 		Serial3.write(4);
