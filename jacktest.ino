@@ -110,7 +110,7 @@ void loop() {
 		Serial2.end();
 		Serial3.end();
 
-		Serial.print(BENSVARIABLE);
+		Serial.print(DIVISOR);
 		Serial.print(", ");
 		Serial.println(((long) (millis()) - latestStart));
 			
