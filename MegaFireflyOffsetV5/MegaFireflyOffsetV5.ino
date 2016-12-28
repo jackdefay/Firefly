@@ -74,62 +74,7 @@ void loop() {
 
 	long systemTime = (long) millis();  //takes the time at the beginning of each loop of "void loop()" to pass to the funcions, so every function uses the same time each loop
 
-
-	if(((digitalRead(button) == HIGH) || (startRelay)) && (thisFireflyHasStarted == false)){  //if the firfly reads that the connected button has been pressed, and this firefly is a designated "button person" firefly, then it relays the start signal to all the connected firelfies
-		Serial1.write(2);  //the number 2 is the designated start signal
-		Serial2.write(2);
-		Serial3.write(2);
-
-		delay(PERIOD);  //waits the set period length
-		previousMillis = (long) systemTime;  //resets the previousMillis and previousMillis2 variables to prevent things from piling up
-		Serial.println("started");  //gives an indicator in the serial monitor
-
-		thisFireflyHasStarted = true;
-
-		delay(initialOffset);  //delays for an additional time for offset. this is how the offset variable is introduced into the system
-
-		startRelay = false;
-	}
-
-	if(((digitalRead(syncButtonOn) == HIGH) || (syncRelayOn) ) && (inSynchronizingMode == false)){
-		Serial1.write(3);
-		Serial2.write(3);
-		Serial3.write(3);
-
-		Serial.println("This firefly is going to wait for the duration of one Period before starting to synchronize");
-		delay(PERIOD);
-		previousMillis = (long) systemTime;
-
-		inSynchronizingMode = true;
-		syncRelayOn = false;
-
-		Serial1.end();
-		Serial2.end();
-		Serial3.end();
-		Serial1.begin(115200);
-		Serial2.begin(115200);
-		Serial3.begin(115200);
-	}
-
-	if(((digitalRead(syncButtonOff) == HIGH) || (syncRelayOff)) && (inSynchronizingMode == true)){
-		Serial1.write(4);
-		Serial2.write(4);
-		Serial3.write(4);
-
-		Serial.println("This firefly is going to wait for the duration of one Period before resuming without synchronizing");
-		delay(PERIOD);
-		previousMillis = (long) systemTime;
-
-		inSynchronizingMode = false;
-		syncRelayOff = false;
-
-		Serial1.end();
-		Serial2.end();
-		Serial3.end();
-		Serial1.begin(115200);
-		Serial2.begin(115200);
-		Serial3.begin(115200);
-	}
+	ifButtonsHaveBeenPressed(initialOffset, systemTime);
 
 	if((mod > PERIOD) || (mod < (-1*PERIOD))) Serial.println("MOD IS SPIRALLING OUT OF CONTROL!");  //a debugging check that prints whenever the mod value overtakes the period, which should never be necessary if the initial offset values are less that the period
 
@@ -314,4 +259,62 @@ void shiftMod(long divisor){
 	if(inSynchronizingMode) mod = (long) (avgOffset/divisor);
 
 	//if(mod==0  && iteration1>3 && iteration2>3 && iteration3>3) Serial.println("SYNCHRONIZED!");
+}
+
+void ifButtonsHaveBeenPressed(long initialOffset, long systemTime){
+	if(((digitalRead(button) == HIGH) || (startRelay)) && (thisFireflyHasStarted == false)){  //if the firfly reads that the connected button has been pressed, and this firefly is a designated "button person" firefly, then it relays the start signal to all the connected firelfies
+		Serial1.write(2);  //the number 2 is the designated start signal
+		Serial2.write(2);
+		Serial3.write(2);
+
+		delay(PERIOD);  //waits the set period length
+		previousMillis = (long) systemTime;  //resets the previousMillis and previousMillis2 variables to prevent things from piling up
+		Serial.println("started");  //gives an indicator in the serial monitor
+
+		thisFireflyHasStarted = true;
+
+		delay(initialOffset);  //delays for an additional time for offset. this is how the offset variable is introduced into the system
+
+		startRelay = false;
+	}
+
+	/*if(((digitalRead(syncButtonOn) == HIGH) || (syncRelayOn) ) && (inSynchronizingMode == false)){
+		Serial1.write(3);
+		Serial2.write(3);
+		Serial3.write(3);
+
+		Serial.println("This firefly is going to wait for the duration of one Period before starting to synchronize");
+		//delay(PERIOD);
+		//previousMillis = (long) systemTime;
+
+		inSynchronizingMode = true;
+		syncRelayOn = false;
+
+		Serial1.end();
+		Serial2.end();
+		Serial3.end();
+		Serial1.begin(115200);
+		Serial2.begin(115200);
+		Serial3.begin(115200);
+	}*/
+
+	/*if(((digitalRead(syncButtonOff) == HIGH) || (syncRelayOff)) && (inSynchronizingMode == true)){
+		Serial1.write(4);
+		Serial2.write(4);
+		Serial3.write(4);
+
+		Serial.println("This firefly is going to wait for the duration of one Period before resuming without synchronizing");
+		delay(PERIOD);
+		previousMillis = (long) systemTime;
+
+		inSynchronizingMode = false;
+		syncRelayOff = false;
+
+		Serial1.end();
+		Serial2.end();
+		Serial3.end();
+		Serial1.begin(115200);
+		Serial2.begin(115200);
+		Serial3.begin(115200);
+	}*/
 }
