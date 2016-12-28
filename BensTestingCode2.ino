@@ -6,6 +6,7 @@
 #define BENSVARIABLE 2
 
 bool DataCollected = false;
+long latestStart = 0;
 
 long led = 13;  //declare the pin for the led
 long button = 2;  //declare the pin for the start button, will only do something on a single firefly
@@ -16,7 +17,6 @@ long iteration1 = 1;  //keeps track of the number of times a value has been stor
 long iteration2 = 1;
 long iteration3 = 1;
 long myIteration = 1;  //keeps track of the same information, but for self
-long oldIteration1 = 1;
 
 long offset1 = 0;  //stores the most recent offset value, used for calculations, calculated in the function updateOffset
 long offset2 = 0;
@@ -94,14 +94,26 @@ void loop() {
 	shiftMod();//shift the wavelength based on the mod variable
 
 	//if times out, then use last stored values...or overwrite them...?
-	
-	if(oldIteration1 != iteration1){
-		oldIteration1=iteration1;
-	}
+
+	Serial.println(avgOffset);
 
 	if(DataCollected == true)
 	{
-		delay(100);
+		Serial1.write(3);  //the number 3 is the designated restart signal
+		Serial2.write(3);
+		Serial3.write(3);
+
+		digitalWrite(led, LOW);
+
+		Serial1.end();
+		Serial2.end();
+		Serial3.end();
+
+		Serial.print(BENSVARIABLE);
+		Serial.print(", ");
+		Serial.println((millis() - latestStart));
+			
+		delay(2000);
 		asm volatile ("  jmp 0");
 	}
 }
@@ -118,10 +130,16 @@ void checkPort1(long initialOffset){
 				delay(PERIOD+initialOffset);  //waits the set period length, then an additional time for offset. this is how the offset variable is introduced into the system
 				previousMillis = (long) millis();  //resets the previousMillis and previousMillis2 variables to prevent things from piling up
 				//previousMillis2 = (long) millis();
-				//Serial.println("started");  //gives an indicator in the serial monitorh
+				//Serial.println("started");  //gives an indicator in the serial monitor
+
+				latestStart = (long) millis();
 			}
 
 			startButton = true;  //finally sets the startButton variable to true, initiating its other processes and locking down the loop with the (startbutton==false) if case
+		}
+
+		if((readValue==3) && (DataCollected == false)){  //an if case that relays the start command to all connected fireflies the first time it recieves the start command itself
+			DataCollected = true;
 		}
 
 		else if((readValue != input1[iteration1-1][1]) && (startButton)){  //if the reieved value is distinct from the last recieved value, and the program has "started" from recieving a 0
@@ -160,6 +178,10 @@ void checkPort2(long initialOffset){
 			startButton = true;  //finally sets the startButton variable to true, initiating its other processes and locking down the loop with the (startbutton==false) if case
 		}
 
+		if((readValue==3) && (DataCollected == false)){  //an if case that relays the start command to all connected fireflies the first time it recieves the start command itself
+			DataCollected = true;
+		}
+
 		else if((readValue != input2[iteration2-1][1]) && (startButton)){  //if the reieved value is distinct from the last recieved value, and the program has "started" from recieving a 0
 			input2[iteration2][0] = (long) millis();  //then sets the first row value of the array to the current time
 			input2[iteration2][1] = (long) readValue;  //and the second row value to the new state of the led
@@ -184,6 +206,10 @@ void checkPort3(long initialOffset){
 			}
 
 			startButton = true;  //finally sets the startButton variable to true, initiating its other processes and locking down the loop with the (startbutton==false) if case
+		}
+
+		if((readValue==3) && (DataCollected == false)){  //an if case that relays the start command to all connected fireflies the first time it recieves the start command itself
+			DataCollected = true;
 		}
 
 		else if((readValue != input3[iteration3-1][1]) && (startButton)){  //if the reieved value is distinct from the last recieved value, and the program has "started" from recieving a 0
@@ -297,13 +323,9 @@ void updateAvg(){
 }
 
 void shiftMod(){
-	if(avgOffset != 0) mod = (long) (avgOffset/BENSVARIABLE);
+	mod = (long) (avgOffset/BENSVARIABLE);
 
-	if(mod==0  && iteration1>3 && iteration2>3 && iteration3>3 && DataCollected == false)
-	{
-		Serial.print(BENSVARIABLE);
-		Serial.print(", ");
-		Serial.println(millis());
+	if((1 >= avgOffset) && (avgOffset >= -1) && (iteration1>3) && (iteration2>3) && (iteration3>3) && (DataCollected == false)){
 		DataCollected = true;
 	}
 }
