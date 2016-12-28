@@ -74,13 +74,15 @@ void loop() {
 		Serial2.write(2);
 		Serial3.write(2);
 
-		delay(PERIOD+initialOffset);  //waits the set period length, then an additional time for offset. this is how the offset variable is introduced into the system
+		delay(PERIOD);  //waits the set period length, then an additional time for offset. this is how the offset variable is introduced into the system
 		previousMillis = (long) systemTime;  //resets the previousMillis and previousMillis2 variables to prevent things from piling up
 		Serial.println("started");  //gives an indicator in the serial monitor
 
 		thisFireflyHasStarted = true;
 
-		latestStart = (long) (millis() - PERIOD);
+		latestStart = (long) (systemTime);
+
+		delay(initialOffset);
 	}
 
 	if((mod > PERIOD) || (mod < (-1*PERIOD))) Serial.println("MOD IS SPIRALLING OUT OF CONTROL!");  //a debugging check that prints whenever the mod value overtakes the period, which should never be necessary if the initial offset values are less that the period
@@ -112,7 +114,7 @@ void loop() {
 
 		Serial.print(DIVISOR);
 		Serial.print(", ");
-		Serial.println(((long) (millis()) - latestStart));
+		Serial.println(((long) (systemTime - latestStart)));
 			
 		delay(2000);
 		asm volatile ("  jmp 0");
