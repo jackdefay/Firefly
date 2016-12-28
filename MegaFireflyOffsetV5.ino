@@ -1,4 +1,4 @@
-//MegaFireflyOffsetV3.ino
+//MegaFireflyOffsetV5.ino
 
 #define PERIOD 2000  //the duration of the blink in milliseconds
 //#define OFFSET 400  //the initial wait time for the before the start of the algorithm - OLD, only use this if need to control the initial offset value
