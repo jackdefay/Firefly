@@ -35,7 +35,8 @@ long previousMillis = 0;  //a variable that keeps track of the last time the led
 bool startRelay = false;  //boolean variable that lets the program know when it has started based on the propagating start message
 bool thisFireflyHasStarted = false;
 
-bool syncRelay = false;
+bool syncRelayOn = false;
+bool syncRelayOff = false;
 bool inSynchronizingMode = false;
 
 void setup() {
@@ -88,7 +89,7 @@ void loop() {
 		delay(initialOffset);  //delays for an additional time for offset. this is how the offset variable is introduced into the system
 	}
 
-	if((((digitalRead(syncButtonOn) == HIGH) || (syncRelay)) && (inSynchronizingMode == false))){
+	if((((digitalRead(syncButtonOn) == HIGH) || (syncRelayOn)) && (inSynchronizingMode == false))){
 		Serial1.write(3);
 		Serial2.write(3);
 		Serial3.write(3);
@@ -100,7 +101,7 @@ void loop() {
 		inSynchronizingMode = true;
 	}
 
-	if((((digitalRead(syncButtonOff) == HIGH) || (syncRelay)) && (inSynchronizingMode == true))){
+	if((((digitalRead(syncButtonOff) == HIGH) || (syncRelayOff)) && (inSynchronizingMode == true))){
 		Serial1.write(4);
 		Serial2.write(4);
 		Serial3.write(4);
@@ -140,11 +141,11 @@ void checkPort1(long initialOffset, long systemTime){
 		}
 
 		else if(readValue==3){
-			syncRelay = true;
+			syncRelayOn = true;
 		}
 
 		else if(readValue==4){
-			syncRelay = false;
+			syncRelayOff = true;
 		}
 
 		else if((readValue != input1[iteration1-1][1]) && (thisFireflyHasStarted)){  //if the reieved value is distinct from the last recieved value, and the program has "started" from recieving a 0
@@ -164,11 +165,11 @@ void checkPort2(long initialOffset, long systemTime){
 		}
 
 		else if(readValue==3){
-			syncRelay = true;
+			syncRelayOn = true;
 		}
 
 		else if(readValue==4){
-			syncRelay = false;
+			syncRelayOff = true;
 		}
 
 		else if((readValue != input2[iteration2-1][1]) && (thisFireflyHasStarted)){  //if the reieved value is distinct from the last recieved value, and the program has "started" from recieving a 0
@@ -188,11 +189,11 @@ void checkPort3(long initialOffset, long systemTime){
 		}
 
 		else if(readValue==3){
-			syncRelay = true;
+			syncRelayOn = true;
 		}
 
 		else if(readValue==4){
-			syncRelay = false;
+			syncRelayOff = true;
 		}
 
 		else if((readValue != input3[iteration3-1][1]) && (thisFireflyHasStarted)){  //if the reieved value is distinct from the last recieved value, and the program has "started" from recieving a 0
