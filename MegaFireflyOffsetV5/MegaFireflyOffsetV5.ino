@@ -114,7 +114,7 @@ void loop() {
 		previousMillis = (long) systemTime;
 
 		inSynchronizingMode = false;
-		SyncRelayOff = false;
+		syncRelayOff = false;
 	}
 
 	if((mod > PERIOD) || (mod < (-1*PERIOD))) Serial.println("MOD IS SPIRALLING OUT OF CONTROL!");  //a debugging check that prints whenever the mod value overtakes the period, which should never be necessary if the initial offset values are less that the period
