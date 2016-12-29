@@ -37,7 +37,7 @@ bool thisFireflyHasStarted = false;
 
 bool syncRelayOn = false;
 bool syncRelayOff = false;
-bool inSynchronizingMode = true;
+bool inSynchronizingMode = false;
 
 void setup() {
 
