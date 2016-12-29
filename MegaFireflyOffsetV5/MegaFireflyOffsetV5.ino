@@ -283,6 +283,10 @@ void ifButtonsHaveBeenPressed(long initialOffset, long systemTime){
 		Serial2.write(3);
 		Serial3.write(3);
 
+		Serial1.flush();
+		Serial2.flush();
+		Serial3.flush();
+
 		//Serial.println("This firefly is going to wait for the duration of one Period before starting to synchronize");
 		//delay(PERIOD);
 		//previousMillis = (long) systemTime;
