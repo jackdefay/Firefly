@@ -250,6 +250,11 @@ void updateAvg(){
 		Serial.print(offset3);
 		Serial.print(",");
 		Serial.println(avgOffset);
+
+		Serial.print("inSynchronizingMode = ");
+		Serial.print(inSynchronizingMode);
+		Serial.print(", mod = ");
+		Serial.println(mod);
 	}
 
 	if(numberOn > 0) avgOffset = (long) tempSum/numberOn;  //calculates the average, based on the sum variable and the number of fireflies variable
@@ -287,6 +292,9 @@ void ifButtonsHaveBeenPressed(long initialOffset, long systemTime){
 		Serial2.flush();
 		Serial3.flush();
 
+		Serial.print("button 3 was pressed");
+		Serial.flush();
+
 		//Serial.println("This firefly is going to wait for the duration of one Period before starting to synchronize");
 		//delay(PERIOD);
 		//previousMillis = (long) systemTime;
@@ -311,6 +319,9 @@ void ifButtonsHaveBeenPressed(long initialOffset, long systemTime){
 		Serial2.flush();
 		Serial3.flush();
 
+		Serial.print("button 4 was pressed");
+		Serial.flush();
+
 		//Serial.println("This firefly is going to wait for the duration of one Period before resuming without synchronizing");
 		//delay(PERIOD);
 		//previousMillis = (long) systemTime;
@@ -318,11 +329,11 @@ void ifButtonsHaveBeenPressed(long initialOffset, long systemTime){
 		inSynchronizingMode = false;
 		syncRelayOff = false;
 
-		Serial1.end();
+		/*Serial1.end();
 		Serial2.end();
 		Serial3.end();
 		Serial1.begin(115200);
 		Serial2.begin(115200);
-		Serial3.begin(115200);
+		Serial3.begin(115200);*/
 	}
 }
