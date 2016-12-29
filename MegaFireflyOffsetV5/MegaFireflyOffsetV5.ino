@@ -302,10 +302,14 @@ void ifButtonsHaveBeenPressed(long initialOffset, long systemTime){
 		Serial3.begin(115200);
 	}
 
-	/*if(((digitalRead(syncButtonOff) == HIGH) || (syncRelayOff)) && (inSynchronizingMode == true)){
+	if(((digitalRead(syncButtonOff) == HIGH) || (syncRelayOff)) && (inSynchronizingMode == true)){
 		Serial1.write(4);
 		Serial2.write(4);
 		Serial3.write(4);
+
+		Serial1.flush();
+		Serial2.flush();
+		Serial3.flush();
 
 		//Serial.println("This firefly is going to wait for the duration of one Period before resuming without synchronizing");
 		//delay(PERIOD);
@@ -320,5 +324,5 @@ void ifButtonsHaveBeenPressed(long initialOffset, long systemTime){
 		Serial1.begin(115200);
 		Serial2.begin(115200);
 		Serial3.begin(115200);
-	}*/
+	}
 }
