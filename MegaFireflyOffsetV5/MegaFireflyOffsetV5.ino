@@ -278,7 +278,7 @@ void ifButtonsHaveBeenPressed(long initialOffset, long systemTime){
 		startRelay = false;
 	}
 
-	if(((digitalRead(syncButtonOn) == HIGH) || (syncRelayOn) ) && (inSynchronizingMode == false)){
+	/*if(((digitalRead(syncButtonOn) == HIGH) || (syncRelayOn) ) && (inSynchronizingMode == false)){
 		Serial1.write(3);
 		Serial2.write(3);
 		Serial3.write(3);
@@ -290,12 +290,12 @@ void ifButtonsHaveBeenPressed(long initialOffset, long systemTime){
 		inSynchronizingMode = true;
 		syncRelayOn = false;
 
-		/*Serial1.end();
+		Serial1.end();
 		Serial2.end();
 		Serial3.end();
 		Serial1.begin(115200);
 		Serial2.begin(115200);
-		Serial3.begin(115200);*/
+		Serial3.begin(115200);
 	}
 
 	if(((digitalRead(syncButtonOff) == HIGH) || (syncRelayOff)) && (inSynchronizingMode == true)){
@@ -310,11 +310,11 @@ void ifButtonsHaveBeenPressed(long initialOffset, long systemTime){
 		inSynchronizingMode = false;
 		syncRelayOff = false;
 
-		/*Serial1.end();
+		Serial1.end();
 		Serial2.end();
 		Serial3.end();
 		Serial1.begin(115200);
 		Serial2.begin(115200);
-		Serial3.begin(115200);*/
-	}
+		Serial3.begin(115200);
+	}*/
 }
