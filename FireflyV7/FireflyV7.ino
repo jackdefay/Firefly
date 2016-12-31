@@ -216,7 +216,7 @@ void updateAvg(){
 		Serial.println(avgOffset);
 	}*/
 
-	if(numberOn > 0) avgOffset = (long) tempSum/numberOn;  //calculates the average, based on the sum variable and the number of fireflies variable
+	if(numberOn > 0) avgOffset = (long) tempSum/(numberOn+1);  //calculates the average, based on the sum variable and the number of fireflies variable
 }
 
 void shiftMod(long divisor){
