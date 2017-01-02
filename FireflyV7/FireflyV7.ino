@@ -1,4 +1,6 @@
-//MegaFireflyOffsetV7.ino
+//FireflyNoiseResistantV2.ino
+//based off FireflyV7
+//now updated to current stable version
 
 #define PERIOD 2000  //the duration of the blink in milliseconds
 #define DIVISOR 2
@@ -190,22 +192,36 @@ void updateAvg(){
 	long tempSum = 0;  //a temporary variable for the sum of the values
 	long numberOn = 0;  //another temporary variable to store the number of "online" fireflies for the calculation of the average
 
+	long distSelf = 0;  //distance from the average to self
+	long dist1 = 0; //distance from the average to the first connected firefly
+	long dist2 = 0;
+	long dist3 = 0;
+
+	if(myIteration > 3){
+		distSelf = (long) abs(avgOffset);
+		//tempSum stays the same since offset to self is 0
+		numberOn++;
+	}
+
 	if(iteration1 > 3){  //ensures that the firefly is "alive"
+		dist1 = (long) abs(offset1 - avgOffset);
 		tempSum += (long) offset1;  //adds the most recently calculated offset value
 		numberOn++;  //adds one to the tally of how many values are being averaged, in order to divide by the correct number
 	}
 
 	if(iteration2 > 3){
+		dist2 = (long) abs(offset2 - avgOffset);
 		tempSum += (long) offset2;
 		numberOn++;
 	}
 
 	if(iteration3 > 3){
+		dist3 = (long) abs(offset3 - avgOffset);
 		tempSum += (long) offset3;
 		numberOn++;
 	}
 
-	/*if((avgOffset != ((long) (tempSum/numberOn))) && ((iteration1>3) || (iteration2>3) || (iteration3>3))){
+	if((avgOffset != ((long) (tempSum/numberOn))) && ((iteration1>3) || (iteration2>3) || (iteration3>3))){
 		Serial.print(millis());  //outputs the millisecond time, the three offset values, and the average offset
 		Serial.print(",");		 //remember self has an offset of 0, so the variance from the mean can still be determined
 		Serial.print(offset1);	 //next copy the serial monitor data to a text file in comma format
@@ -215,9 +231,12 @@ void updateAvg(){
 		Serial.print(offset3);
 		Serial.print(",");
 		Serial.println(avgOffset);
-	}*/
+	}
 
-	if(numberOn > 0) avgOffset = (double) tempSum/(numberOn+1);  //calculates the average, based on the sum variable and the number of fireflies variable
+	if(numberOn > 0){
+		avgOffset = (double) tempSum/(numberOn+1);  //calculates the average, based on the sum variable and the number of fireflies variable
+		avgOffset = (double) restrictNoise(tempSum, numberOn, distSelf, dist1, dist2, dist3);
+	}
 }
 
 void shiftMod(long divisor){
@@ -248,4 +267,27 @@ long relay(long initialOffset, long systemTime){  //propogates the start signal 
 		previousMillis = (long) systemTime;  //resets the previousMillis variables to prevent things from piling up
 	}
 	return systemTime;
+}
+
+double restrictNoise(long tempSum, long numberOn, long distSelf, long dist1, long dist2, long dist3){
+
+	long tempAvgOffset = avgOffset;
+
+	long tempMax1 = (long) max(distSelf, dist1);
+	long tempMax2 = (long) max(dist2, dist3);
+	long tempMaxTotal = (long) max(tempMax1, tempMax2);
+
+	bool noGo = false;
+
+	if(tempMaxTotal == distSelf);  //then tempSum stays the same since offset from self is 0
+	else if(tempMaxTotal == dist1) tempSum -= (offset1/numberOn);
+	else if(tempMaxTotal == dist2) tempSum -= (offset2/numberOn);
+	else if(tempMaxTotal == dist3) tempSum -= (offset3/numberOn);  //this also works if two of the offsets are equal, because then the value subtracted is the same too
+	else noGo = true;
+
+	if((numberOn > 1) && (noGo == false)){
+		tempAvgOffset = (long) tempSum/(numberOn-1);  //calculates the average, based on the sum variable and the number of fireflies variable
+	} 
+
+	return (long) tempAvgOffset;
 }
