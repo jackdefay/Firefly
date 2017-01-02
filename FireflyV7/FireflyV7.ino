@@ -6,7 +6,7 @@
 long led = 13;  //declare the pin for the led
 long button = 2;  //declare the pin for the start button, will only do something on a single firefly
 
-long mod = 0;  //this variable will be used to shift the temporal position of the blinking
+double mod = 0;  //this variable will be used to shift the temporal position of the blinking
 
 long iteration1 = 1;  //keeps track of the number of times a value has been stored in the array. Also keeps track of the current position in the array for calculations
 long iteration2 = 1;
@@ -17,7 +17,7 @@ long offset1 = 0;  //stores the most recent offset value, used for calculations,
 long offset2 = 0;
 long offset3 = 0;
 
-long avgOffset = 0;  //the average offset value calculated in the function updateAvg
+double avgOffset = 0;  //the average offset value calculated in the function updateAvg
 
 long input1[100][3];  //an array that logs a bunch of useful data for people to use
 long input2[100][3];  //stores the time that a state change has occured, the new state, and the offset values
@@ -134,7 +134,8 @@ void checkPort3(long initialOffset, long systemTime){
 void timeToBlink(long systemTime){
 	long currentMillis = (long) systemTime;  //allows the function to compare the current time to the time recorded in previousMillis
 
-	if(((currentMillis - previousMillis) >= (PERIOD + mod)) && (thisFireflyHasStarted)){  //if the difference in time between the previousMillis and current time, is greater than or equal to the period of the firefly plus its modifier value; and the program has "started"
+	//this next step is approximated to the nearest millisecond, even though the calulations may be more precise
+	if(((currentMillis - previousMillis) >= ((long) (PERIOD + mod))) && (thisFireflyHasStarted)){  //if the difference in time between the previousMillis and current time, is greater than or equal to the period of the firefly plus its modifier value; and the program has "started"
 		previousMillis = (long) currentMillis;  //if the criteria are met, then resets the previousMillis time to the current one, in order to prep for the next cycle
 		long valueToSend = 0;  //initiates a intermediate variable for the value that will be sent across the serial ports to the other fireflies
 
@@ -216,11 +217,11 @@ void updateAvg(){
 		Serial.println(avgOffset);
 	}*/
 
-	if(numberOn > 0) avgOffset = (long) tempSum/(numberOn+1);  //calculates the average, based on the sum variable and the number of fireflies variable
+	if(numberOn > 0) avgOffset = (double) tempSum/(numberOn+1);  //calculates the average, based on the sum variable and the number of fireflies variable
 }
 
 void shiftMod(long divisor){
-	mod = (long) (avgOffset/divisor);
+	mod = (double) (avgOffset/divisor);
 
 	//if(mod==0  && iteration1>3 && iteration2>3 && iteration3>3) Serial.println("SYNCHRONIZED!");
 }
