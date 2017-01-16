@@ -98,7 +98,7 @@ void timeToBlink(long systemTime){
 	long currentMillis = (long) systemTime;  //allows the function to compare the current time to the time recorded in previousMillis
 
 	//this next step is approximated to the nearest millisecond, even though the calulations may be more precise
-	if(((currentMillis - previousMillis) >= ((long) (PERIOD + mod))) && (thisFireflyHasStarted)){  //if the difference in time between the previousMillis and current time, is greater than or equal to the period of the firefly plus its modifier value; and the program has "started"
+	if(((currentMillis - previousMillis) >= ((long) PERIOD)) && (thisFireflyHasStarted)){  //if the difference in time between the previousMillis and current time, is greater than or equal to the period of the firefly plus its modifier value; and the program has "started"
 		previousMillis = (long) currentMillis;  //if the criteria are met, then resets the previousMillis time to the current one, in order to prep for the next cycle
 		long valueToSend = 0;  //initiates a intermediate variable for the value that will be sent across the serial ports to the other fireflies
 
