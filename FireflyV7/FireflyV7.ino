@@ -1,5 +1,5 @@
-//FireflyNoiseResistantV2.ino
-//based off FireflyV7
+//FireflyDualAlgorithmV1.ino
+//based off FireflyV7 and FireflyNoiseResistantV2
 //now updated to current stable version
 
 #define PERIOD 2000  //the duration of the blink in milliseconds
@@ -7,6 +7,7 @@
 
 long led = 13;  //declare the pin for the led
 long button = 2;  //declare the pin for the start button, will only do something on a single firefly
+long noiseReductionSwitch = 3;
 
 double mod = 0;  //this variable will be used to shift the temporal position of the blinking
 
@@ -31,11 +32,14 @@ long previousMillis = 0;  //a variable that keeps track of the last time the led
 
 bool startRelay = false;  //boolean variable that tells the program to relay the start message
 bool thisFireflyHasStarted = false;  //boolean that allows the firefly to recieve incoming serial communication that isn't a "2"
+bool noiseReductionRelay = false;
+bool noiseReduction = false;
 
 void setup() {
 
     pinMode(led, OUTPUT);
     pinMode(button, INPUT); //initiates the button as an input, again, will only function on a single firefly
+    pinMode(noiseReductionSwitch, INPUT);
 
     for(int i=0; i<100	; i++){  //zeros the arrays
     	for(int j=0; j<3; j++){
@@ -63,7 +67,7 @@ void loop() {
 
 	long systemTime = (long) millis();  //takes the time at the beginning of each loop of "void loop()" to pass to the funcions, so every function uses the same time each loop
 
-	startButton();  //a function that checks if the button has been pressed
+	buttonCheck();  //a function that checks if the button has been pressed
 	systemTime = relay(initialOffset, systemTime);  //relays the start signal if the boolean is true, and initiates the start process
 
 	//if((mod > PERIOD) || (mod < (-1*PERIOD))) Serial.println("MOD IS SPIRALLING OUT OF CONTROL!");  //a debugging check that prints whenever the mod value overtakes the period, which should never be necessary if the initial offset values are less that the period
@@ -93,6 +97,10 @@ void checkPort1(long initialOffset, long systemTime){
 			startRelay = true;  //finally sets the startRelay variable to true, initiating its other processes and locking down the loop with the (startbutton==false) if case
 		}
 
+		else if(readValue==3){
+			noiseReductionRelay = true;
+		}
+
 		else if((readValue != input1[iteration1-1][1]) && (thisFireflyHasStarted)){  //if the reieved value is distinct from the last recieved value, and the program has "started" from recieving a 0
 			input1[iteration1][0] = (long) systemTime;  //then sets the first row value of the array to the current time
 			input1[iteration1][1] = (long) readValue;  //and the second row value to the new state of the led
@@ -109,6 +117,10 @@ void checkPort2(long initialOffset, long systemTime){
 			startRelay = true;  //finally sets the startRelay variable to true, initiating its other processes and locking down the loop with the (startbutton==false) if case
 		}
 
+		else if(readValue==3){
+			noiseReductionRelay = true;
+		}
+
 		else if((readValue != input2[iteration2-1][1]) && (thisFireflyHasStarted)){  //if the reieved value is distinct from the last recieved value, and the program has "started" from recieving a 0
 			input2[iteration2][0] = (long) systemTime;  //then sets the first row value of the array to the current time
 			input2[iteration2][1] = (long) readValue;  //and the second row value to the new state of the led
@@ -123,6 +135,10 @@ void checkPort3(long initialOffset, long systemTime){
 
 		if(readValue==2){  //an if case that relays the start command to all connected fireflies the first time it recieves the start command itself
 			startRelay = true;  //finally sets the startRelay variable to true, initiating its other processes and locking down the loop with the (startbutton==false) if case
+		}
+
+		else if(readValue==3){
+			noiseReductionRelay = true;
 		}
 
 		else if((readValue != input3[iteration3-1][1]) && (thisFireflyHasStarted)){  //if the reieved value is distinct from the last recieved value, and the program has "started" from recieving a 0
@@ -230,14 +246,14 @@ void updateAvg(){
 
 	if(numberOn > 0){
 		avgOffset = (double) tempSum/(numberOn+1);  //calculates the average, based on the sum variable and the number of fireflies variable
-		restrictNoise(tempSum, numberOn, distSelf, dist1, dist2, dist3);  //although avgOffset is not passed into this function, avgOffset is used in and recalculated in this function
+		if(noiseReduction == true) restrictNoise(tempSum, numberOn, distSelf, dist1, dist2, dist3);  //although avgOffset is not passed into this function, avgOffset is used in and recalculated in this function
 	}
 }
 
 void shiftMod(long divisor){
 	mod = (double) (avgOffset/divisor);
 
-		Serial.print(millis());  //outputs the millisecond time, the three offset values, and the average offset
+		/*Serial.print(millis());  //outputs the millisecond time, the three offset values, and the average offset
 		Serial.print(",");		 //remember self has an offset of 0, so the variance from the mean can still be determined
 		Serial.print(offset1);	 //next copy the serial monitor data to a text file in comma format
 		Serial.print(",");		 //then upload that text file to a google sheet to interpret and graph the data
@@ -245,13 +261,14 @@ void shiftMod(long divisor){
 		Serial.print(",");
 		Serial.print(offset3);
 		Serial.print(",");
-		Serial.println(avgOffset);
+		Serial.println(avgOffset);*/
 
 	//if(mod==0  && iteration1>3 && iteration2>3 && iteration3>3) Serial.println("SYNCHRONIZED!");
 }
 
-void startButton(){
-	if(digitalRead(button) == HIGH) startRelay = true;  //checks if the button is pressed
+void buttonCheck(){
+	if((digitalRead(button) == HIGH) && (digitalRead(noiseReductionSwitch) == LOW)) startRelay = true;  //checks if the button is pressed
+	else if((digitalRead(button) == HIGH) && (digitalRead(noiseReductionSwitch) == HIGH)) noiseReductionRelay = true;
 	while(digitalRead(button) == HIGH){}  //waits for the button to stop being pressed before resuming the code
 }
 
@@ -271,6 +288,26 @@ long relay(long initialOffset, long systemTime){  //propogates the start signal 
 		systemTime = (long) millis();
 		previousMillis = (long) systemTime;  //resets the previousMillis variables to prevent things from piling up
 	}
+
+	else if((noiseReductionRelay) && (thisFireflyHasStarted == false) && (noiseReduction == false)){  //if the firfly reads that the connected button has been pressed, and this firefly is a designated "button person" firefly, then it relays the start signal to all the connected firelfies
+		Serial1.write(3);  //the number 2 is the designated start signal
+		Serial2.write(3);
+		Serial3.write(3);
+
+		Serial.println("noise reduction activated");  //gives an indicator in the serial monitor
+		Serial.flush();
+		
+		delay(initialOffset);  //waits an additional time for offset. this is how the offset variable is introduced into the system
+
+		thisFireflyHasStarted = true;  //sets the boolean that allows the firefly to recieve values from the serial ports that aren't a 2
+		noiseReduction = true;
+
+		systemTime = (long) millis();
+		previousMillis = (long) systemTime;  //resets the previousMillis variables to prevent things from piling up
+
+		Serial.println("the switch was on");
+	}
+
 	return systemTime;
 }
 
