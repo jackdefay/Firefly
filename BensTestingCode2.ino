@@ -1,14 +1,12 @@
-//MegaFireflyOffsetV3.ino
+//MegaFireflyOffsetV7.ino
 
 #define PERIOD 2000  //the duration of the blink in milliseconds
-//#define OFFSET 400  //the initial wait time for the before the start of the algorithm - OLD, only use this if need to control the initial offset value
-//#define MAXDIVISOR 10  //the max divisor value if one uses random divisors, would make for an interesting test
-#define DIVISOR 2
+#define CONVERSIONMULT 1.75
 
 long led = 13;  //declare the pin for the led
 long button = 2;  //declare the pin for the start button, will only do something on a single firefly
 
-long mod = 0;  //this variable will be used to shift the temporal position of the blinking
+double mod = 0;  //this variable will be used to shift the temporal position of the blinking
 
 long iteration1 = 1;  //keeps track of the number of times a value has been stored in the array. Also keeps track of the current position in the array for calculations
 long iteration2 = 1;
@@ -19,7 +17,7 @@ long offset1 = 0;  //stores the most recent offset value, used for calculations,
 long offset2 = 0;
 long offset3 = 0;
 
-long avgOffset = 0;  //the average offset value calculated in the function updateAvg
+double avgOffset = 0;  //the average offset value calculated in the function updateAvg
 
 long input1[100][3];  //an array that logs a bunch of useful data for people to use
 long input2[100][3];  //stores the time that a state change has occured, the new state, and the offset values
@@ -28,13 +26,12 @@ long myInput[100][3];
 
 long ledState = LOW;  //an intermediate variable used in the timeToBlink to set the led state
 long previousMillis = 0;  //a variable that keeps track of the last time the led blinked, in order to properly space the next blink in timeToBlink
-//long previousMillis2 = 0;  //used for the same perpose, but in the shiftMod function
 
-bool startRelay = false;  //boolean variable that lets the program know when it has started based on the propagating start message
-bool thisFireflyHasStarted = false;
+bool startRelay = false;  //boolean variable that tells the program to relay the start message
+bool thisFireflyHasStarted = false;  //boolean that allows the firefly to recieve incoming serial communication that isn't a "2"
 
 bool DataCollected = false;
-long latestStart = 0;
+long lateststart = 0;
 
 void setup() {
 
@@ -62,29 +59,15 @@ void setup() {
 
 void loop() {
 
-	static long initialOffset = (long) random(PERIOD);  //randomizes the initial offset of the system, this fuction was previously done by "OFFSET"
-	//staic long initialOffset = OFFSET;  //old strat, leave commented out unless want to control the initial offset
-	static long divisor = DIVISOR;  //sets the divisor value, which is then passed into the shiftMod callbackFunction
-	//static long divisor = (long) random(MAXDIVISOR);  //where the divisor value is calculated if random divisors are used
+	static long initialOffset = (long) random(PERIOD);  //randomizes the initial offset of the system, this was previously done by "OFFSET"
+	static long conversionMult = CONVERSIONMULT;  //sets the divisor value, which is then passed into the shiftMod function
 
 	long systemTime = (long) millis();  //takes the time at the beginning of each loop of "void loop()" to pass to the funcions, so every function uses the same time each loop
 
-	if(((digitalRead(button) == HIGH) || (startRelay)) && (thisFireflyHasStarted == false)){  //if the firfly reads that the connected button has been pressed, and this firefly is a designated "button person" firefly, then it relays the start signal to all the connected firelfies
-		Serial1.write(2);  //the number 2 is the designated start signal
-		Serial2.write(2);
-		Serial3.write(2);
+	startButton();  //a function that checks if the button has been pressed
+	systemTime = relay(initialOffset, systemTime);  //relays the start signal if the boolean is true, and initiates the start process
 
-		delay(2000);  //waits the set period length, then an additional time for offset. this is how the offset variable is introduced into the system
-		previousMillis = (long) systemTime;  //resets the previousMillis and previousMillis2 variables to prevent things from piling up
-		Serial.println("started");  //gives an indicator in the serial monitor
-		delay(initialOffset);
-
-		thisFireflyHasStarted = true;
-
-		latestStart = (long) (millis() - PERIOD);
-	}
-
-	if((mod > PERIOD) || (mod < (-1*PERIOD))) Serial.println("MOD IS SPIRALLING OUT OF CONTROL!");  //a debugging check that prints whenever the mod value overtakes the period, which should never be necessary if the initial offset values are less that the period
+	//if((mod > PERIOD) || (mod < (-1*PERIOD))) Serial.println("MOD IS SPIRALLING OUT OF CONTROL!");  //a debugging check that prints whenever the mod value overtakes the period, which should never be necessary if the initial offset values are less that the period
 
 	checkPort1(initialOffset, systemTime);  //listen to the three ports on loop
 	checkPort2(initialOffset, systemTime);
@@ -98,7 +81,9 @@ void loop() {
 
 	updateAvg();//update the average value with new data
 
-	shiftMod(divisor);//shift the wavelength based on the mod variable
+	shiftMod(conversionMult);//shift the period based on the mod variable
+
+	//if times out, then use last stored values...or overwrite them...?
 
 	if(DataCollected == true){
 		Serial1.write(3);  //the number 3 is the designated restart signal
@@ -108,18 +93,16 @@ void loop() {
 		digitalWrite(led, LOW);
 
 		Serial1.end();
-		Serial2.end();
+		Serial2.end(); 
 		Serial3.end();
 
-		Serial.print(DIVISOR);
+		Serial.print(conversionMult);
 		Serial.print(", ");
-		Serial.println(((long) (millis()) - latestStart));
-			
+		Serial.println(((long) (millis()) - lateststart));
+		
 		delay(4000);
 		asm volatile ("  jmp 0");
 	}
-
-	//if times out, then use last stored values...or overwrite them...?
 }
 
 void checkPort1(long initialOffset, long systemTime){
@@ -167,7 +150,7 @@ void checkPort3(long initialOffset, long systemTime){
 		long readValue = (long) Serial3.read();  //reads the first value stored in the serial buffer
 
 		if(readValue==2){  //an if case that relays the start command to all connected fireflies the first time it recieves the start command itself
-			startRelay= true;  //finally sets the startRelay variable to true, initiating its other processes and locking down the loop with the (startbutton==false) if case
+			startRelay = true;  //finally sets the startRelay variable to true, initiating its other processes and locking down the loop with the (startbutton==false) if case
 		}
 
 		else if((readValue==3) && (DataCollected == false)){  //an if case that relays the start command to all connected fireflies the first time it recieves the start command itself
@@ -185,7 +168,8 @@ void checkPort3(long initialOffset, long systemTime){
 void timeToBlink(long systemTime){
 	long currentMillis = (long) systemTime;  //allows the function to compare the current time to the time recorded in previousMillis
 
-	if(((currentMillis - previousMillis) >= (PERIOD + mod)) && (thisFireflyHasStarted)){  //if the difference in time between the previousMillis and current time, is greater than or equal to the period of the firefly plus its modifier value; and the program has "started"
+	//this next step is approximated to the nearest millisecond, even though the calulations may be more precise
+	if(((currentMillis - previousMillis) >= ((long) (PERIOD + mod))) && (thisFireflyHasStarted)){  //if the difference in time between the previousMillis and current time, is greater than or equal to the period of the firefly plus its modifier value; and the program has "started"
 		previousMillis = (long) currentMillis;  //if the criteria are met, then resets the previousMillis time to the current one, in order to prep for the next cycle
 		long valueToSend = 0;  //initiates a intermediate variable for the value that will be sent across the serial ports to the other fireflies
 
@@ -267,15 +251,39 @@ void updateAvg(){
 		Serial.println(avgOffset);
 	}*/
 
-	if(numberOn > 0) avgOffset = (long) tempSum/numberOn;  //calculates the average, based on the sum variable and the number of fireflies variable
+	if(numberOn > 0) avgOffset = (double) tempSum/(numberOn+1);  //calculates the average, based on the sum variable and the number of fireflies variable
 }
 
-void shiftMod(long divisor){
-	mod = (long) (avgOffset/divisor);
+void shiftMod(long conversionMult){
+	mod = (double) (avgOffset/conversionMult);
 
 	if((1 >= avgOffset) && (avgOffset >= -1) && (iteration1>3) && (iteration2>3) && (iteration3>3) && (DataCollected == false)){
 		DataCollected = true;
 	}
 
-	//if(mod==0  && iteration1>3 && iteration2>3 && iteration3>3) Serial.println("SYNCHRONIZED!");
+}
+
+void startButton(){
+	if(digitalRead(button) == HIGH) startRelay = true;  //checks if the button is pressed
+}
+
+long relay(long initialOffset, long systemTime){  //propogates the start signal throughout the swarm
+	if((startRelay) && (thisFireflyHasStarted == false)){  //if the firfly reads that the connected button has been pressed, and this firefly is a designated "button person" firefly, then it relays the start signal to all the connected firelfies
+		Serial1.write(2);  //the number 2 is the designated start signal
+		Serial2.write(2);
+		Serial3.write(2);
+
+		//Serial.println("started");  //gives an indicator in the serial monitor
+		Serial.flush();
+		
+		delay(initialOffset);  //waits an additional time for offset. this is how the offset variable is introduced into the system
+
+		thisFireflyHasStarted = true;  //sets the boolean that allows the firefly to recieve values from the serial ports that aren't a 2
+
+		systemTime = (long) millis();
+		previousMillis = (long) systemTime;  //resets the previousMillis variables to prevent things from piling up
+
+		lateststart = millis();
+	}
+	return systemTime;
 }
