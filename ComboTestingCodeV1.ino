@@ -3,7 +3,7 @@
 //now updated to current stable version
 
 #define PERIOD 2000  //the duration of the blink in milliseconds
-#define DIVISOR 2 //this is conversionMult now
+#define DIVISOR 1.75 //this is conversionMult now
 
 long led = 13;  //declare the pin for the led
 long button = 2;  //declare the pin for the start button, will only do something on a single firefly
@@ -102,7 +102,7 @@ void loop() {
 		Serial2.end(); 
 		Serial3.end();
 
-		Serial.print(conversionMult);
+		Serial.print(divisor);
 		Serial.print(", ");
 		Serial.println(((long) (millis()) - lateststart));
 		
