@@ -92,9 +92,9 @@ void loop() {
 	//if times out, then use last stored values...or overwrite them...?
 
 	if(DataCollected == true){
-		Serial1.write(3);  //the number 3 is the designated restart signal
-		Serial2.write(3);
-		Serial3.write(3);
+		Serial1.write(4);  //the number 3 is the designated restart signal
+		Serial2.write(4);
+		Serial3.write(4);
 
 		digitalWrite(led, LOW);
 
