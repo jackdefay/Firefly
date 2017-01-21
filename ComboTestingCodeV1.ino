@@ -1,9 +1,9 @@
-//FireflyDualAlgorithmV1.ino
-//based off FireflyV7 and FireflyNoiseResistantV2
+//ComboTestingCodeV1.ino
+//based off DualAlgorithmV1.ino
 //now updated to current stable version
 
 #define PERIOD 2000  //the duration of the blink in milliseconds
-#define DIVISOR 1.75 //this is conversionMult now
+#define DIVISOR 1 //this is conversionMult now
 
 long led = 13;  //declare the pin for the led
 long button = 2;  //declare the pin for the start button, will only do something on a single firefly
@@ -66,7 +66,7 @@ void setup() {
 void loop() {
 
 	static long initialOffset = (long) random(PERIOD);  //randomizes the initial offset of the system, this was previously done by "OFFSET"
-	static long divisor = DIVISOR;  //sets the divisor value, which is then passed into the shiftMod function
+	static double divisor = DIVISOR;  //sets the divisor value, which is then passed into the shiftMod function
 
 	long systemTime = (long) millis();  //takes the time at the beginning of each loop of "void loop()" to pass to the funcions, so every function uses the same time each loop
 
@@ -284,8 +284,11 @@ void updateAvg(){
 	}
 }
 
-void shiftMod(long divisor){
+void shiftMod(double divisor){
 	mod = (double) (avgOffset/divisor);
+	double partOfPeriod = (double) ((0.15) * PERIOD);
+	mod = (double) min(mod, partOfPeriod);  //only addition from FireflyDualAlgorithm, this change caps the convergence multiple length
+
 
 		/*Serial.print(millis());  //outputs the millisecond time, the three offset values, and the average offset
 		Serial.print(",");		 //remember self has an offset of 0, so the variance from the mean can still be determined
@@ -314,7 +317,7 @@ long relay(long initialOffset, long systemTime){  //propogates the start signal 
 		Serial3.write(2);
 
 		//Serial.println("started");  //gives an indicator in the serial monitor
-		Serial.flush();
+		//Serial.flush();
 		
 		delay(initialOffset);  //waits an additional time for offset. this is how the offset variable is introduced into the system
 
@@ -332,7 +335,7 @@ long relay(long initialOffset, long systemTime){  //propogates the start signal 
 		Serial3.write(3);
 
 		//Serial.println("noise reduction activated");  //gives an indicator in the serial monitor
-		Serial.flush();
+		//Serial.flush();
 		
 		delay(initialOffset);  //waits an additional time for offset. this is how the offset variable is introduced into the system
 
