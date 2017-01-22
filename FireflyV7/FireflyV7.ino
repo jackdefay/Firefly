@@ -245,7 +245,7 @@ void updateAvg(){
 	}
 
 	if(numberOn > 0){
-		avgOffset = (double) tempSum/(numberOn+1);  //calculates the average, based on the sum variable and the number of fireflies variable
+		avgOffset = (double) tempSum/(numberOn);  //calculates the average, based on the sum variable and the number of fireflies variable
 		if(noiseReduction == true) restrictNoise(tempSum, numberOn, distSelf, dist1, dist2, dist3);  //although avgOffset is not passed into this function, avgOffset is used in and recalculated in this function
 	}
 }
