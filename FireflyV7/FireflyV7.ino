@@ -1,9 +1,9 @@
-//FireflyDualAlgorithmV1.ino
-//based off FireflyV7 and FireflyNoiseResistantV2
+//FireflyDemoCodeV1.ino
+//based off FireflyDualAlgorithmV1
 //now updated to current stable version
 
-#define PERIOD 2000  //the duration of the blink in milliseconds
-#define DIVISOR 2
+#define PERIOD 2000  //the duration of the blink in milliseconds	
+#define DIVISOR 1
 
 long led = 13;  //declare the pin for the led
 long button = 2;  //declare the pin for the start button, will only do something on a single firefly
@@ -246,7 +246,8 @@ void updateAvg(){
 
 	if(numberOn > 0){
 		avgOffset = (double) tempSum/(numberOn);  //calculates the average, based on the sum variable and the number of fireflies variable
-		if(noiseReduction == true) restrictNoise(tempSum, numberOn, distSelf, dist1, dist2, dist3);  //although avgOffset is not passed into this function, avgOffset is used in and recalculated in this function
+		double partOfPeriod = ((.01)*PERIOD);
+		if((noiseReduction == true) && ((partOfPeriod <= offset1) || (partOfPeriod <= offset2) || (partOfPeriod <= offset3))) restrictNoise(tempSum, numberOn, distSelf, dist1, dist2, dist3);  //although avgOffset is not passed into this function, avgOffset is used in and recalculated in this function
 	}
 }
 
