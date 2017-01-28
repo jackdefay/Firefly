@@ -3,7 +3,10 @@
 //now updated to current stable version
 
 #define PERIOD 2000  //the duration of the blink in milliseconds
-#define DIVISOR 1.75 //this is conversionMult now
+#define DIVISOR 1 //this is conversionMult now
+
+bool swarmStarter = false;
+bool switchModeToNoiseReduction = true;
 
 long led = 13;  //declare the pin for the led
 long button = 2;  //declare the pin for the start button, will only do something on a single firefly
@@ -65,6 +68,11 @@ void setup() {
 
 void loop() {
 
+	static long tempTime = millis();
+
+	if(((millis() - tempTime) == 2000) && (swarmStarter) && (switchModeToNoiseReduction == false)) startRelay = true;
+	else if(((millis() - tempTime) == 2000) && (swarmStarter) && (switchModeToNoiseReduction == true)) noiseReductionRelay = true;
+
 	static long initialOffset = (long) random(PERIOD);  //randomizes the initial offset of the system, this was previously done by "OFFSET"
 	static long divisor = DIVISOR;  //sets the divisor value, which is then passed into the shiftMod function
 
@@ -95,6 +103,8 @@ void loop() {
 		Serial1.write(4);  //the number 3 is the designated restart signal
 		Serial2.write(4);
 		Serial3.write(4);
+		
+		//Serial.println("4");
 
 		digitalWrite(led, LOW);
 
@@ -297,6 +307,10 @@ void shiftMod(long divisor){
 		Serial.print(",");
 		Serial.println(avgOffset);*/
 
+	/*if(millis()%1000 == 0){
+		Serial.println(avgOffset);
+	}*/
+
 	if((1 >= avgOffset) && (avgOffset >= -1) && (iteration1>3) && (iteration2>3) && (iteration3>3) && (DataCollected == false)){
 		DataCollected = true;
 	}
@@ -312,6 +326,8 @@ long relay(long initialOffset, long systemTime){  //propogates the start signal 
 		Serial1.write(2);  //the number 2 is the designated start signal
 		Serial2.write(2);
 		Serial3.write(2);
+
+		//Serial.println("2");
 
 		//Serial.println("started");  //gives an indicator in the serial monitor
 		Serial.flush();
@@ -330,6 +346,8 @@ long relay(long initialOffset, long systemTime){  //propogates the start signal 
 		Serial1.write(3);  //the number 2 is the designated start signal
 		Serial2.write(3);
 		Serial3.write(3);
+
+		//Serial.println("3");
 
 		//Serial.println("noise reduction activated");  //gives an indicator in the serial monitor
 		Serial.flush();
