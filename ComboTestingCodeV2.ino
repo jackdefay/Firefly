@@ -1,9 +1,12 @@
-//ComboTestingCodeV1.ino
-//based off DualAlgorithmV1.ino
+//FireflyDualAlgorithmV1.ino
+//based off FireflyV7 and FireflyNoiseResistantV2
 //now updated to current stable version
 
 #define PERIOD 2000  //the duration of the blink in milliseconds
 #define DIVISOR 1 //this is conversionMult now
+
+bool swarmStarter = false;
+bool switchModeToNoiseReduction = true;
 
 long led = 13;  //declare the pin for the led
 long button = 2;  //declare the pin for the start button, will only do something on a single firefly
@@ -65,8 +68,13 @@ void setup() {
 
 void loop() {
 
+	static long tempTime = millis();
+
+	if(((millis() - tempTime) == 2000) && (swarmStarter) && (switchModeToNoiseReduction == false)) startRelay = true;
+	else if(((millis() - tempTime) == 2000) && (swarmStarter) && (switchModeToNoiseReduction == true)) noiseReductionRelay = true;
+
 	static long initialOffset = (long) random(PERIOD);  //randomizes the initial offset of the system, this was previously done by "OFFSET"
-	static double divisor = DIVISOR;  //sets the divisor value, which is then passed into the shiftMod function
+	static long divisor = DIVISOR;  //sets the divisor value, which is then passed into the shiftMod function
 
 	long systemTime = (long) millis();  //takes the time at the beginning of each loop of "void loop()" to pass to the funcions, so every function uses the same time each loop
 
@@ -95,6 +103,8 @@ void loop() {
 		Serial1.write(4);  //the number 3 is the designated restart signal
 		Serial2.write(4);
 		Serial3.write(4);
+		
+		//Serial.println("4");
 
 		digitalWrite(led, LOW);
 
@@ -284,21 +294,14 @@ void updateAvg(){
 	}
 }
 
-void shiftMod(double divisor){
+void shiftMod(long divisor){
 	mod = (double) (avgOffset/divisor);
 	double partOfPeriod = (double) ((0.15) * PERIOD);
-	mod = (double) min(mod, partOfPeriod);  //only addition from FireflyDualAlgorithm, this change caps the convergence multiple length
+	mod = (double) min(mod, partOfPeriod);  //only addition from FireflyDualAlgorithm, this change caps the "convergence multiple" length to abide by biological limitations
 
-
-		/*Serial.print(millis());  //outputs the millisecond time, the three offset values, and the average offset
-		Serial.print(",");		 //remember self has an offset of 0, so the variance from the mean can still be determined
-		Serial.print(offset1);	 //next copy the serial monitor data to a text file in comma format
-		Serial.print(",");		 //then upload that text file to a google sheet to interpret and graph the data
-		Serial.print(offset2);
-		Serial.print(",");
-		Serial.print(offset3);
-		Serial.print(",");
-		Serial.println(avgOffset);*/
+	/*if(millis()%1000 == 0){
+		Serial.println(avgOffset);
+	}*/
 
 	if((1 >= avgOffset) && (avgOffset >= -1) && (iteration1>3) && (iteration2>3) && (iteration3>3) && (DataCollected == false)){
 		DataCollected = true;
@@ -316,8 +319,10 @@ long relay(long initialOffset, long systemTime){  //propogates the start signal 
 		Serial2.write(2);
 		Serial3.write(2);
 
+		//Serial.println("2");
+
 		//Serial.println("started");  //gives an indicator in the serial monitor
-		//Serial.flush();
+		Serial.flush();
 		
 		delay(initialOffset);  //waits an additional time for offset. this is how the offset variable is introduced into the system
 
@@ -334,8 +339,10 @@ long relay(long initialOffset, long systemTime){  //propogates the start signal 
 		Serial2.write(3);
 		Serial3.write(3);
 
+		//Serial.println("3");
+
 		//Serial.println("noise reduction activated");  //gives an indicator in the serial monitor
-		//Serial.flush();
+		Serial.flush();
 		
 		delay(initialOffset);  //waits an additional time for offset. this is how the offset variable is introduced into the system
 
