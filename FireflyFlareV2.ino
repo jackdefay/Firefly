@@ -1,7 +1,7 @@
-//FireflyFlareV1.ino
+//FireflyFlareV2.ino
 
-#define BASEVOLTAGE 0.5
-#define MAXVOLTAGE 2.2
+#define BASEVOLTAGE 0.1
+#define MAXVOLTAGE 2.5
 
 int led = 13;  //declare the pin for the led, on the mega this allows for pwm control
 
@@ -16,7 +16,7 @@ void setup() {
     Serial2.begin(115200);
     Serial3.begin(115200);
 
-    Serial.println("*****************************************************");  //to signal the start of the program
+    //Serial.println("*****************************************************");  //to signal the start of the program
 
     double pwm = convert2PWM(BASEVOLTAGE);
     analogWrite(led, pwm);
@@ -56,9 +56,9 @@ void checkPort3(){
 }
 
 void start(){
-	int randtemp = random(500);  //generates a random number between 0 and 500
+	int randtemp = random(2000);  //generates a random number between 0 and 500
 
-	Serial.println(randtemp);
+	//Serial.println(randtemp);
 
 	if(randtemp == 57){  //if the random number = 57 (just a value I chose), then it sends the start signal. This gives it a 1 in 500 chance to start each time it loops
 		flare();
@@ -73,7 +73,7 @@ double convert2PWM(double voltage){
 
 void flare(){
 
-	delay(1000);  //waits two seconds
+	delay(400);  //waits two seconds
 
 	Serial1.write(1);
 	Serial2.write(1);
@@ -95,16 +95,21 @@ void flare(){
 	int i = pwm1/1;  //baseline voltage as a pwm input, rounds off to the neares integer pwm
 	int j = pwm2/1;  //max voltage as a pwm input
 
-	int delaytime = (5000/(j-i));  //so the flare always takes 5 seconds, rounds off to the nearest millisecond
+	int delaytime = (1000/(j-i));  //so the flare always takes 5 seconds, rounds off to the nearest millisecond
 
-	for(i; i<=j; i++){  //flares
+	for(i; i<=pwm2; i++){  //flares
 		analogWrite(led, i);
+		delay(delaytime);
+	}
+
+	for(j; j>=pwm1; j--){  //flares
+		analogWrite(led, j);
 		delay(delaytime);
 	}
 
 	digitalWrite(led, LOW);  //then writes the led to turn off
 
-	delay(10000);  //once the flare has finished, waits 10 seconds in "hibernation" before watching the other fireflies again
+	delay(5000);  //once the flare has finished, waits 10 seconds in "hibernation" before watching the other fireflies again
 
 	analogWrite(led, pwm1);  //then writes the led to its base voltage
 
