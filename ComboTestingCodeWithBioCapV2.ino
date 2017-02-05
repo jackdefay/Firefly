@@ -294,7 +294,7 @@ void updateAvg(){
 	}
 }
 
-void shiftMod(long divisor){
+void shiftMod(double divisor){
 	mod = (double) (avgOffset/divisor);
 	double partOfPeriod = (double) ((0.15) * PERIOD);
 	mod = (double) min(mod, partOfPeriod);  //only addition from FireflyDualAlgorithm, this change caps the "convergence multiple" length to abide by biological limitations
