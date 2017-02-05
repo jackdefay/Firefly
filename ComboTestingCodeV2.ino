@@ -294,7 +294,7 @@ void updateAvg(){
 	}
 }
 
-void shiftMod(long divisor){
+void shiftMod(double divisor){
 	mod = (double) (avgOffset/divisor);
 
 		/*Serial.print(millis());  //outputs the millisecond time, the three offset values, and the average offset
