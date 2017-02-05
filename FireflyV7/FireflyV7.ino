@@ -59,7 +59,7 @@ void setup() {
 void loop() {
 
 	static long initialOffset = (long) random(PERIOD);  //randomizes the initial offset of the system, this was previously done by "OFFSET"
-	static long divisor = DIVISOR;  //sets the divisor value, which is then passed into the shiftMod function
+	static double divisor = DIVISOR;  //sets the divisor value, which is then passed into the shiftMod function
 
 	long systemTime = (long) millis();  //takes the time at the beginning of each loop of "void loop()" to pass to the funcions, so every function uses the same time each loop
 
@@ -234,7 +234,7 @@ void updateAvg(){
 	}
 }
 
-void shiftMod(long divisor){
+void shiftMod(double divisor){
 	mod = (double) (avgOffset/divisor);
 
 		Serial.print(millis());  //outputs the millisecond time, the three offset values, and the average offset
