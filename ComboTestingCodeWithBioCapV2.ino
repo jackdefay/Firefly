@@ -74,7 +74,7 @@ void loop() {
 	else if(((millis() - tempTime) == 2000) && (swarmStarter) && (switchModeToNoiseReduction == true)) noiseReductionRelay = true;
 
 	static long initialOffset = (long) random(PERIOD);  //randomizes the initial offset of the system, this was previously done by "OFFSET"
-	static long divisor = DIVISOR;  //sets the divisor value, which is then passed into the shiftMod function
+	static double divisor = DIVISOR;  //sets the divisor value, which is then passed into the shiftMod function
 
 	long systemTime = (long) millis();  //takes the time at the beginning of each loop of "void loop()" to pass to the funcions, so every function uses the same time each loop
 
